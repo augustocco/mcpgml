@@ -23,6 +23,16 @@ class LMSEU_WordPress_Abilities {
                         'description' => __( 'Opcional: Filtrar por rol específico (subscriber, contributor, author, editor, administrator).', 'lmseu-mcp-abilities' ),
                     ),
                 ),
+                'additionalProperties' => false,
+            ),
+            'output_schema'       => array(
+                'type'       => 'object',
+                'properties' => array(
+                    'total'   => array( 'type' => 'integer' ),
+                    'by_role' => array( 'type' => 'object', 'additionalProperties' => array( 'type' => 'integer' ) ),
+                    'message' => array( 'type' => 'string' ),
+                ),
+                'required'   => array( 'total', 'message' ),
             ),
             'execute_callback'    => array( 'LMSEU_WordPress_Abilities', 'get_user_count' ),
             'permission_callback' => '__return_true',
