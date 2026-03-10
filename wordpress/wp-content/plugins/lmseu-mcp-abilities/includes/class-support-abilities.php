@@ -27,12 +27,13 @@ class LMSEU_Support_Abilities {
                 'additionalProperties' => false,
             ),
             'output_schema'       => array(
-                'type'       => 'object',
-                'properties' => array(
+                'type'                 => 'object',
+                'properties'           => array(
                     'exists'       => array( 'type' => 'boolean' ),
                     'masked_email' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'exists' ),
+                'required'             => array( 'exists' ),
+                'additionalProperties' => false,
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'check_user_exists' ),
             'permission_callback' => '__return_true',
@@ -58,12 +59,13 @@ class LMSEU_Support_Abilities {
                 'additionalProperties' => false,
             ),
             'output_schema'       => array(
-                'type'       => 'object',
-                'properties' => array(
+                'type'                 => 'object',
+                'properties'           => array(
                     'id'  => array( 'type' => 'integer' ),
                     'url' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'id', 'url' ),
+                'required'             => array( 'id', 'url' ),
+                'additionalProperties' => false,
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'create_page' ),
             'permission_callback' => '__return_true',
@@ -87,12 +89,13 @@ class LMSEU_Support_Abilities {
                 'additionalProperties' => false,
             ),
             'output_schema'       => array(
-                'type'       => 'object',
-                'properties' => array(
+                'type'                 => 'object',
+                'properties'           => array(
                     'success' => array( 'type' => 'boolean' ),
                     'message' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'success', 'message' ),
+                'required'             => array( 'success', 'message' ),
+                'additionalProperties' => false,
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'enable_elementor' ),
             'permission_callback' => '__return_true',
@@ -117,12 +120,13 @@ class LMSEU_Support_Abilities {
                 'additionalProperties' => false,
             ),
             'output_schema'       => array(
-                'type'       => 'object',
-                'properties' => array(
+                'type'                 => 'object',
+                'properties'           => array(
                     'id'  => array( 'type' => 'integer' ),
                     'url' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'id', 'url' ),
+                'required'             => array( 'id', 'url' ),
+                'additionalProperties' => false,
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'upload_default_image' ),
             'permission_callback' => '__return_true',
@@ -148,11 +152,12 @@ class LMSEU_Support_Abilities {
                 'additionalProperties' => false,
             ),
             'output_schema'       => array(
-                'type'       => 'object',
-                'properties' => array(
+                'type'                 => 'object',
+                'properties'           => array(
                     'url' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'url' ),
+                'required'             => array( 'url' ),
+                'additionalProperties' => false,
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'upload_user_avatar' ),
             'permission_callback' => '__return_true',
@@ -176,11 +181,12 @@ class LMSEU_Support_Abilities {
                 'additionalProperties' => false,
             ),
             'output_schema'       => array(
-                'type'       => 'object',
-                'properties' => array(
+                'type'                 => 'object',
+                'properties'           => array(
                     'output' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'output' ),
+                'required'             => array( 'output' ),
+                'additionalProperties' => false,
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'execute_php' ),
             'permission_callback' => '__return_true',
