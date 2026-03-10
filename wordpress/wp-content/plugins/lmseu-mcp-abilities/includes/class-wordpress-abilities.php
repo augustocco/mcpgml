@@ -16,27 +16,22 @@ class LMSEU_WordPress_Abilities {
             'category'            => 'wordpress',
             'description'         => __( 'Obtiene el total de usuarios registrados en WordPress, con desglose por rol.', 'lmseu-mcp-abilities' ),
             'input_schema'        => array(
-                'type'                 => 'object',
-                'properties'           => array(
+                'type'       => 'object',
+                'properties' => array(
                     'role' => array(
                         'type'        => 'string',
                         'description' => __( 'Opcional: Filtrar por rol específico (subscriber, contributor, author, editor, administrator).', 'lmseu-mcp-abilities' ),
                     ),
                 ),
-                'additionalProperties' => false,
             ),
             'output_schema'       => array(
-                'type'                 => 'object',
-                'properties'           => array(
+                'type'       => 'object',
+                'properties' => array(
                     'total'   => array( 'type' => 'integer' ),
-                    'by_role' => array(
-                        'type'                 => 'object',
-                        'additionalProperties' => array( 'type' => 'integer' ),
-                    ),
+                    'by_role' => array( 'type' => 'object', 'additionalProperties' => array( 'type' => 'integer' ) ),
                     'message' => array( 'type' => 'string' ),
                 ),
-                'required'             => array( 'total', 'message' ),
-                'additionalProperties' => false,
+                'required'   => array( 'total', 'message' ),
             ),
             'execute_callback'    => array( 'LMSEU_WordPress_Abilities', 'get_user_count' ),
             'permission_callback' => '__return_true',

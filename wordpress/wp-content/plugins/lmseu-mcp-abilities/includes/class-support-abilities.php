@@ -15,25 +15,23 @@ class LMSEU_Support_Abilities {
             'category'            => 'support',
             'description'         => 'Verifica si existe un usuario registrado con el email proporcionado.',
             'input_schema'        => array(
-                'type'                 => 'object',
-                'properties'           => array(
+                'type'       => 'object',
+                'properties' => array(
                     'email' => array(
                         'type'        => 'string',
                         'format'      => 'email',
                         'description' => 'Email del usuario a verificar.',
                     ),
                 ),
-                'required'             => array( 'email' ),
-                'additionalProperties' => false,
+                'required'   => array( 'email' ),
             ),
             'output_schema'       => array(
-                'type'                 => 'object',
-                'properties'           => array(
+                'type'       => 'object',
+                'properties' => array(
                     'exists'       => array( 'type' => 'boolean' ),
                     'masked_email' => array( 'type' => 'string' ),
                 ),
-                'required'             => array( 'exists' ),
-                'additionalProperties' => false,
+                'required'   => array( 'exists' ),
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'check_user_exists' ),
             'permission_callback' => '__return_true',
@@ -49,23 +47,21 @@ class LMSEU_Support_Abilities {
             'category'            => 'support',
             'description'         => 'Crea una nueva página en WordPress con el título y contenido especificados.',
             'input_schema'        => array(
-                'type'                 => 'object',
-                'properties'           => array(
+                'type'       => 'object',
+                'properties' => array(
                     'title'   => array( 'type' => 'string', 'description' => 'Título de la página.' ),
                     'content' => array( 'type' => 'string', 'description' => 'Contenido de la página.' ),
                     'status'  => array( 'type' => 'string', 'default' => 'publish', 'description' => 'Estado de la página (publish, draft, etc).' ),
                 ),
-                'required'             => array( 'title', 'content' ),
-                'additionalProperties' => false,
+                'required'   => array( 'title', 'content' ),
             ),
             'output_schema'       => array(
-                'type'                 => 'object',
-                'properties'           => array(
+                'type'       => 'object',
+                'properties' => array(
                     'id'  => array( 'type' => 'integer' ),
                     'url' => array( 'type' => 'string' ),
                 ),
-                'required'             => array( 'id', 'url' ),
-                'additionalProperties' => false,
+                'required'   => array( 'id', 'url' ),
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'create_page' ),
             'permission_callback' => '__return_true',
@@ -81,21 +77,19 @@ class LMSEU_Support_Abilities {
             'category'            => 'support',
             'description'         => 'Habilita el editor Elementor para una página específica.',
             'input_schema'        => array(
-                'type'                 => 'object',
-                'properties'           => array(
+                'type'       => 'object',
+                'properties' => array(
                     'post_id' => array( 'type' => 'integer', 'description' => 'ID del post/página.' ),
                 ),
-                'required'             => array( 'post_id' ),
-                'additionalProperties' => false,
+                'required'   => array( 'post_id' ),
             ),
             'output_schema'       => array(
-                'type'                 => 'object',
-                'properties'           => array(
+                'type'       => 'object',
+                'properties' => array(
                     'success' => array( 'type' => 'boolean' ),
                     'message' => array( 'type' => 'string' ),
                 ),
-                'required'             => array( 'success', 'message' ),
-                'additionalProperties' => false,
+                'required'   => array( 'success', 'message' ),
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'enable_elementor' ),
             'permission_callback' => '__return_true',
@@ -111,22 +105,20 @@ class LMSEU_Support_Abilities {
             'category'            => 'support',
             'description'         => 'Sube una imagen al sistema de medios desde una cadena Base64 y la marca como imagen por defecto.',
             'input_schema'        => array(
-                'type'                 => 'object',
-                'properties'           => array(
+                'type'       => 'object',
+                'properties' => array(
                     'filename' => array( 'type' => 'string', 'default' => 'default-course.webp' ),
                     'base64'   => array( 'type' => 'string', 'description' => 'Contenido de la imagen en base64.' ),
                 ),
-                'required'             => array( 'base64' ),
-                'additionalProperties' => false,
+                'required'   => array( 'base64' ),
             ),
             'output_schema'       => array(
-                'type'                 => 'object',
-                'properties'           => array(
+                'type'       => 'object',
+                'properties' => array(
                     'id'  => array( 'type' => 'integer' ),
                     'url' => array( 'type' => 'string' ),
                 ),
-                'required'             => array( 'id', 'url' ),
-                'additionalProperties' => false,
+                'required'   => array( 'id', 'url' ),
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'upload_default_image' ),
             'permission_callback' => '__return_true',
@@ -142,22 +134,20 @@ class LMSEU_Support_Abilities {
             'category'            => 'support',
             'description'         => 'Sube una imagen de perfil para un usuario específico y la guarda en su meta data.',
             'input_schema'        => array(
-                'type'                 => 'object',
-                'properties'           => array(
+                'type'       => 'object',
+                'properties' => array(
                     'user_id'  => array( 'type' => 'integer', 'description' => 'ID del usuario.' ),
                     'filename' => array( 'type' => 'string', 'description' => 'Nombre del archivo (opcional).' ),
                     'base64'   => array( 'type' => 'string', 'description' => 'Contenido de la imagen en base64.' ),
                 ),
-                'required'             => array( 'user_id', 'base64' ),
-                'additionalProperties' => false,
+                'required'   => array( 'user_id', 'base64' ),
             ),
             'output_schema'       => array(
-                'type'                 => 'object',
-                'properties'           => array(
+                'type'       => 'object',
+                'properties' => array(
                     'url' => array( 'type' => 'string' ),
                 ),
-                'required'             => array( 'url' ),
-                'additionalProperties' => false,
+                'required'   => array( 'url' ),
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'upload_user_avatar' ),
             'permission_callback' => '__return_true',
@@ -173,20 +163,18 @@ class LMSEU_Support_Abilities {
             'category'            => 'support',
             'description'         => 'Ejecuta código PHP y retorna el resultado (para debugging).',
             'input_schema'        => array(
-                'type'                 => 'object',
-                'properties'           => array(
+                'type'       => 'object',
+                'properties' => array(
                     'code' => array( 'type' => 'string', 'description' => 'Código PHP a ejecutar.' ),
                 ),
-                'required'             => array( 'code' ),
-                'additionalProperties' => false,
+                'required'   => array( 'code' ),
             ),
             'output_schema'       => array(
-                'type'                 => 'object',
-                'properties'           => array(
+                'type'       => 'object',
+                'properties' => array(
                     'output' => array( 'type' => 'string' ),
                 ),
-                'required'             => array( 'output' ),
-                'additionalProperties' => false,
+                'required'   => array( 'output' ),
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'execute_php' ),
             'permission_callback' => '__return_true',
