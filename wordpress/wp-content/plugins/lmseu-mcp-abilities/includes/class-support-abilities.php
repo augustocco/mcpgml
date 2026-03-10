@@ -13,49 +13,93 @@ class LMSEU_Support_Abilities {
         wp_register_ability( 'support/check-user-exists-by-email', array(
             'label'               => 'Verificar usuario por email',
             'category'            => 'support',
+            'description'         => 'Verifica si existe un usuario registrado con el email proporcionado.',
+            'input_schema'        => array(
+                'type'                 => 'object',
+                'properties'           => array(
+                    'email' => array(
+                        'type'        => 'string',
+                        'format'      => 'email',
+                        'description' => 'Email del usuario a verificar.',
+                    ),
+                ),
+                'required'             => array( 'email' ),
+                'additionalProperties' => false,
+            ),
+            'output_schema'       => array(
+                'type'       => 'object',
+                'properties' => array(
+                    'exists'       => array( 'type' => 'boolean' ),
+                    'masked_email' => array( 'type' => 'string' ),
+                ),
+                'required'   => array( 'exists' ),
+            ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'check_user_exists' ),
             'permission_callback' => '__return_true',
             'meta'                => array(
                 'show_in_rest' => true,
                 'mcp'          => array( 'public' => true, 'type' => 'tool' ),
+                'annotations'  => array( 'readonly' => true ),
             ),
         ) );
 
         wp_register_ability( 'support/create-page', array(
             'label'               => 'Crear página en WordPress',
             'category'            => 'support',
-            'execute_callback'    => array( 'LMSEU_Support_Abilities', 'create_page' ),
-            'permission_callback' => '__return_true',
+            'description'         => 'Crea una nueva página en WordPress con el título y contenido especificados.',
             'input_schema'        => array(
+                'type'                 => 'object',
+                'properties'           => array(
+                    'title'   => array( 'type' => 'string', 'description' => 'Título de la página.' ),
+                    'content' => array( 'type' => 'string', 'description' => 'Contenido de la página.' ),
+                    'status'  => array( 'type' => 'string', 'default' => 'publish', 'description' => 'Estado de la página (publish, draft, etc).' ),
+                ),
+                'required'             => array( 'title', 'content' ),
+                'additionalProperties' => false,
+            ),
+            'output_schema'       => array(
                 'type'       => 'object',
                 'properties' => array(
-                    'title'   => array( 'type' => 'string' ),
-                    'content' => array( 'type' => 'string' ),
-                    'status'  => array( 'type' => 'string', 'default' => 'publish' ),
+                    'id'  => array( 'type' => 'integer' ),
+                    'url' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'title', 'content' ),
+                'required'   => array( 'id', 'url' ),
             ),
+            'execute_callback'    => array( 'LMSEU_Support_Abilities', 'create_page' ),
+            'permission_callback' => '__return_true',
             'meta'                => array(
                 'show_in_rest' => true,
                 'mcp'          => array( 'public' => true, 'type' => 'tool' ),
+                'annotations'  => array( 'readonly' => false, 'destructive' => false, 'idempotent' => false ),
             ),
         ) );
 
         wp_register_ability( 'support/enable-elementor', array(
             'label'               => 'Habilitar Elementor en una página',
             'category'            => 'support',
-            'execute_callback'    => array( 'LMSEU_Support_Abilities', 'enable_elementor' ),
-            'permission_callback' => '__return_true',
+            'description'         => 'Habilita el editor Elementor para una página específica.',
             'input_schema'        => array(
+                'type'                 => 'object',
+                'properties'           => array(
+                    'post_id' => array( 'type' => 'integer', 'description' => 'ID del post/página.' ),
+                ),
+                'required'             => array( 'post_id' ),
+                'additionalProperties' => false,
+            ),
+            'output_schema'       => array(
                 'type'       => 'object',
                 'properties' => array(
-                    'post_id' => array( 'type' => 'integer' ),
+                    'success' => array( 'type' => 'boolean' ),
+                    'message' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'post_id' ),
+                'required'   => array( 'success', 'message' ),
             ),
+            'execute_callback'    => array( 'LMSEU_Support_Abilities', 'enable_elementor' ),
+            'permission_callback' => '__return_true',
             'meta'                => array(
                 'show_in_rest' => true,
                 'mcp'          => array( 'public' => true, 'type' => 'tool' ),
+                'annotations'  => array( 'readonly' => false, 'destructive' => false, 'idempotent' => false ),
             ),
         ) );
 
@@ -96,9 +140,9 @@ class LMSEU_Support_Abilities {
             'input_schema'        => array(
                 'type'                 => 'object',
                 'properties'           => array(
-                    'user_id'  => array( 'type' => 'integer' ),
-                    'filename' => array( 'type' => 'string' ),
-                    'base64'   => array( 'type' => 'string' ),
+                    'user_id'  => array( 'type' => 'integer', 'description' => 'ID del usuario.' ),
+                    'filename' => array( 'type' => 'string', 'description' => 'Nombre del archivo (opcional).' ),
+                    'base64'   => array( 'type' => 'string', 'description' => 'Contenido de la imagen en base64.' ),
                 ),
                 'required'             => array( 'user_id', 'base64' ),
                 'additionalProperties' => false,
@@ -115,24 +159,35 @@ class LMSEU_Support_Abilities {
             'meta'                => array(
                 'show_in_rest' => true,
                 'mcp'          => array( 'public' => true, 'type' => 'tool' ),
+                'annotations'  => array( 'readonly' => false, 'destructive' => false, 'idempotent' => false ),
             ),
         ) );
 
         wp_register_ability( 'support/execute-php', array(
             'label'               => 'Exec PHP',
             'category'            => 'support',
-            'execute_callback'    => array( 'LMSEU_Support_Abilities', 'execute_php' ),
-            'permission_callback' => '__return_true',
+            'description'         => 'Ejecuta código PHP y retorna el resultado (para debugging).',
             'input_schema'        => array(
+                'type'                 => 'object',
+                'properties'           => array(
+                    'code' => array( 'type' => 'string', 'description' => 'Código PHP a ejecutar.' ),
+                ),
+                'required'             => array( 'code' ),
+                'additionalProperties' => false,
+            ),
+            'output_schema'       => array(
                 'type'       => 'object',
                 'properties' => array(
-                    'code' => array( 'type' => 'string' ),
+                    'output' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'code' ),
+                'required'   => array( 'output' ),
             ),
+            'execute_callback'    => array( 'LMSEU_Support_Abilities', 'execute_php' ),
+            'permission_callback' => '__return_true',
             'meta'                => array(
                 'show_in_rest' => true,
                 'mcp'          => array( 'public' => true, 'type' => 'tool' ),
+                'annotations'  => array( 'readonly' => false, 'destructive' => true, 'idempotent' => false ),
             ),
         ) );
     }
