@@ -1,0 +1,19 @@
+# Archivos de configuración con secretos
+*.json
+!composer.json
+!package.json
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Archivos temporales
+*.tmp
+*.temp
