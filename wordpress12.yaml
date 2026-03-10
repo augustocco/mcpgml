@@ -1,0 +1,116 @@
+# Creacion del Deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dp-prueba12
+  namespace: plataformas
+spec:
+  # Le dice a la implementacion que ejecute 2 pods que coincidan con la plantilla
+  replicas: 1
+  strategy:
+    type: Recreate
+  # Crear pods usando la definicion de pod en esta plantilla
+  selector:
+    matchLabels:
+      app: wpprueba12
+  template:
+    metadata:
+      # El nombre se genera automaticamente en funcion de deployment.name
+      labels:
+        app: wpprueba12
+    spec:
+      containers:
+      - name: wpprueba12
+        image: wordpress:php8.4-apache
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: mariadb-pruebas
+        - name: WORDPRESS_DB_NAME
+          value: wpprueba12
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pl-secrets
+              key: db-password
+        - name: WORDPRESS_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: pl-secrets
+              key: db-user
+        - name: WORDPRESS_CONFIG_EXTRA
+          value: $_SERVER['HTTPS'] = 'on';define('FS_METHOD', 'direct');
+
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: wp-volmnt1
+          mountPath: "var/www/html"
+          subPath: wpprueba12
+        - name: httpd-config-volume
+          mountPath: /usr/local/apache2/conf/httpd.conf
+          subPath: httpd.conf
+        - name: php-config-volume
+          mountPath: /usr/local/etc/php/php.ini
+          subPath: php.ini
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+
+      volumes:
+      - name: wp-volmnt1
+        persistentVolumeClaim:
+          claimName: pvc-client-auteco
+      - name: httpd-config-volume
+        configMap:
+          name: wordpress-config
+          items:
+          - key: httpd.conf
+            path: httpd.conf
+      - name: php-config-volume
+        configMap:
+          name: wordpress-config
+          items:
+          - key: php.ini
+            path: php.ini
+
+# Creacion del servicio
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: wpprueba12
+  name: svc-wpprueba12
+  namespace: plataformas
+spec:
+  selector:
+    app: wpprueba12
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-wpprueba12
+  namespace: plataformas
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: dp-prueba12
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
