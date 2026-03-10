@@ -39,6 +39,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-reports-dashboard.php
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-global-filters.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-storage-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-learndash-manager.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-mcp-http-auth.php';
 
 add_action( 'plugins_loaded', array( 'LMSEU_Client_Storage_Manager', 'init' ) );
 add_action( 'plugins_loaded', array( 'LMSEU_Client_LearnDash_Manager', 'init' ) );
