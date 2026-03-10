@@ -294,3 +294,4 @@ class LMSEU_Support_Abilities {
         );
     }
 }
+LMSEU_Support_Abilities::register();
