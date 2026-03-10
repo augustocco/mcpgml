@@ -23,7 +23,6 @@ class LMSEU_Support_Abilities {
                         'description' => 'Email del usuario a verificar.',
                     ),
                 ),
-                'required'   => array( 'email' ),
             ),
             'output_schema'       => array(
                 'type'       => 'object',
@@ -31,7 +30,6 @@ class LMSEU_Support_Abilities {
                     'exists'       => array( 'type' => 'boolean' ),
                     'masked_email' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'exists' ),
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'check_user_exists' ),
             'permission_callback' => '__return_true',
@@ -53,7 +51,6 @@ class LMSEU_Support_Abilities {
                     'content' => array( 'type' => 'string', 'description' => 'Contenido de la página.' ),
                     'status'  => array( 'type' => 'string', 'default' => 'publish', 'description' => 'Estado de la página (publish, draft, etc).' ),
                 ),
-                'required'   => array( 'title', 'content' ),
             ),
             'output_schema'       => array(
                 'type'       => 'object',
@@ -61,7 +58,6 @@ class LMSEU_Support_Abilities {
                     'id'  => array( 'type' => 'integer' ),
                     'url' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'id', 'url' ),
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'create_page' ),
             'permission_callback' => '__return_true',
@@ -81,7 +77,6 @@ class LMSEU_Support_Abilities {
                 'properties' => array(
                     'post_id' => array( 'type' => 'integer', 'description' => 'ID del post/página.' ),
                 ),
-                'required'   => array( 'post_id' ),
             ),
             'output_schema'       => array(
                 'type'       => 'object',
@@ -89,7 +84,6 @@ class LMSEU_Support_Abilities {
                     'success' => array( 'type' => 'boolean' ),
                     'message' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'success', 'message' ),
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'enable_elementor' ),
             'permission_callback' => '__return_true',
@@ -110,7 +104,6 @@ class LMSEU_Support_Abilities {
                     'filename' => array( 'type' => 'string', 'default' => 'default-course.webp' ),
                     'base64'   => array( 'type' => 'string', 'description' => 'Contenido de la imagen en base64.' ),
                 ),
-                'required'   => array( 'base64' ),
             ),
             'output_schema'       => array(
                 'type'       => 'object',
@@ -118,7 +111,6 @@ class LMSEU_Support_Abilities {
                     'id'  => array( 'type' => 'integer' ),
                     'url' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'id', 'url' ),
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'upload_default_image' ),
             'permission_callback' => '__return_true',
@@ -140,14 +132,12 @@ class LMSEU_Support_Abilities {
                     'filename' => array( 'type' => 'string', 'description' => 'Nombre del archivo (opcional).' ),
                     'base64'   => array( 'type' => 'string', 'description' => 'Contenido de la imagen en base64.' ),
                 ),
-                'required'   => array( 'user_id', 'base64' ),
             ),
             'output_schema'       => array(
                 'type'       => 'object',
                 'properties' => array(
                     'url' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'url' ),
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'upload_user_avatar' ),
             'permission_callback' => '__return_true',
@@ -167,14 +157,12 @@ class LMSEU_Support_Abilities {
                 'properties' => array(
                     'code' => array( 'type' => 'string', 'description' => 'Código PHP a ejecutar.' ),
                 ),
-                'required'   => array( 'code' ),
             ),
             'output_schema'       => array(
                 'type'       => 'object',
                 'properties' => array(
                     'output' => array( 'type' => 'string' ),
                 ),
-                'required'   => array( 'output' ),
             ),
             'execute_callback'    => array( 'LMSEU_Support_Abilities', 'execute_php' ),
             'permission_callback' => '__return_true',
