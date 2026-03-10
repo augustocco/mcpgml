@@ -66,4 +66,3 @@ class LMSEU_WordPress_Abilities {
         );
     }
 }
-LMSEU_WordPress_Abilities::register();

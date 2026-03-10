@@ -226,4 +226,7 @@ class LMSEU_LearnDash_Abilities {
         return $report;
     }
 }
-LMSEU_LearnDash_Abilities::register();
+
+add_action( 'wp_abilities_api_init', function() {
+    LMSEU_LearnDash_Abilities::register();
+}, 20 );
