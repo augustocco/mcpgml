@@ -101,14 +101,19 @@ function eunolms_get_user_courses_by_status() {
         $course_post = get_post( $course_id );
         if( ! $course_post ) continue;
 
-        $progress = learndash_course_get_user_progress( $course_id, $user_id );
+        // Get course progress percentage
+        $progress = 0;
+        if ( function_exists( 'learndash_get_user_course_progress' ) ) {
+            $course_progress = learndash_get_user_course_progress( $user_id, $course_id );
+            $progress = isset( $course_progress['percentage'] ) ? $course_progress['percentage'] : 0;
+        }
 
         $course_data = array(
             'id'        => $course_id,
             'title'     => $course_post->post_title,
             'permalink' => get_permalink( $course_id ),
             'image'     => get_the_post_thumbnail_url( $course_id, 'medium' ),
-            'progress'  => $progress ? $progress['percentage'] : 0,
+            'progress'  => $progress,
         );
 
         if ( $course_status === 'completed' ) {
