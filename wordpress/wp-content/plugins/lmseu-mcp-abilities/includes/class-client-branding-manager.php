@@ -36,7 +36,7 @@ class LMSEU_Client_Branding_Manager {
      * @return array Información de branding con logo, isotipo y colores
      */
     public static function get_client_branding( $user_id ) {
-        $parent_group_id = self::get_client_parent_group( $user_id );
+        $parent_group_id = self::get_branding_group_for_user( $user_id );
 
         if ( ! $parent_group_id ) {
             return self::get_default_branding();
@@ -67,6 +67,59 @@ class LMSEU_Client_Branding_Manager {
         );
 
         return $branding;
+    }
+
+    /**
+     * Determina el grupo fuente de branding para un usuario.
+     *
+     * Prioridad:
+     * 1) Grupo directo del usuario que tenga isotipo o logo.
+     * 2) Grupo padre de un grupo directo con isotipo o logo.
+     * 3) Fallback a la lógica histórica de grupo padre.
+     *
+     * @param int $user_id ID del usuario.
+     * @return int|false ID del grupo a usar para branding o false.
+     */
+    private static function get_branding_group_for_user( $user_id ) {
+        if ( ! function_exists( 'learndash_get_users_group_ids' ) ) {
+            return false;
+        }
+
+        $user_groups = learndash_get_users_group_ids( $user_id );
+        if ( empty( $user_groups ) ) {
+            return false;
+        }
+
+        // 1) Intentar primero con grupos directos del usuario.
+        foreach ( $user_groups as $group_id ) {
+            if ( self::group_has_branding_assets( $group_id ) ) {
+                return (int) $group_id;
+            }
+        }
+
+        // 2) Si no hay branding en directos, revisar su padre.
+        foreach ( $user_groups as $group_id ) {
+            $parent_id = wp_get_post_parent_id( $group_id );
+            if ( $parent_id > 0 && self::group_has_branding_assets( $parent_id ) ) {
+                return (int) $parent_id;
+            }
+        }
+
+        // 3) Fallback histórico.
+        return self::get_client_parent_group( $user_id );
+    }
+
+    /**
+     * Verifica si un grupo tiene activos de branding (isotipo o logo).
+     *
+     * @param int $group_id ID del grupo.
+     * @return bool
+     */
+    private static function group_has_branding_assets( $group_id ) {
+        $isotype_url = get_post_meta( $group_id, self::META_KEYS['isotype_url'], true );
+        $logo_url = get_the_post_thumbnail_url( $group_id, 'full' );
+
+        return ! empty( $isotype_url ) || ! empty( $logo_url );
     }
 
     /**
@@ -195,8 +248,3 @@ class LMSEU_Client_Branding_Manager {
         return $clients;
     }
 }
-
-// Inicializar la clase
-add_action( 'init', function() {
-    LMSEU_Client_Branding_Manager::init();
-}, 10 );
