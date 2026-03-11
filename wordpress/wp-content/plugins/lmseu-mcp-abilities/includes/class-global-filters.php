@@ -207,4 +207,5 @@ class LMSEU_Global_Filters {
         return $html;
     }
 }
+
 LMSEU_Global_Filters::init();
