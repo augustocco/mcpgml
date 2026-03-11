@@ -554,4 +554,5 @@ class LMSEU_Reports_Dashboard {
         return ob_get_clean();
     }
 }
+
 LMSEU_Reports_Dashboard::init();

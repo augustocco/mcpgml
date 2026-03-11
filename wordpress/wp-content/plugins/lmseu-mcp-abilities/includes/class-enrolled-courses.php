@@ -465,4 +465,5 @@ class LMSEU_Enrolled_Courses {
         return ob_get_clean();
     }
 }
+
 LMSEU_Enrolled_Courses::init();
