@@ -48,6 +48,7 @@ add_action( 'widgets_init', 'eunolms_widgets_init' );
 
 function eunolms_scripts() {
     wp_enqueue_style( 'eunolms-style', get_stylesheet_uri() );
+    wp_enqueue_script( 'eunolms-header', get_template_directory_uri() . '/js/header.js', array(), '1.0.0', true );
 }
 add_action( 'wp_enqueue_scripts', 'eunolms_scripts' );
 
@@ -60,3 +61,11 @@ function eunolms_excerpt_more( $more ) {
     return '... <a href="' . get_permalink() . '">' . __( 'Leer más', 'eunolms' ) . '</a>';
 }
 add_filter( 'excerpt_more', 'eunolms_excerpt_more' );
+
+function eunolms_redirect_home_to_profile() {
+    if ( is_front_page() && is_user_logged_in() ) {
+        wp_redirect( home_url( '/mi-perfil/' ) );
+        exit;
+    }
+}
+add_action( 'template_redirect', 'eunolms_redirect_home_to_profile' );
