@@ -1,0 +1,9 @@
+Archivo de prueba para verificar el proceso de subida al servidor.
+
+Fecha: 2026-03-11
+Proyecto: MCPGML
+Servidor: ubuntu@44.201.232.70
+Ruta EFS: /var/efsAutecos/wpprueba12/
+
+Este archivo es una prueba de que el proceso de subida
+usando pscp y plink funciona correctamente.

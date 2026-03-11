@@ -12,13 +12,16 @@ This skill automates the complete deployment workflow for the MCPGML WordPress p
 ## Architecture
 
 ```
-Local Development → GitHub → Kubernetes (EKS) → Production Pod
+Local Development → GitHub → EC2 Server (EFS) → Kubernetes (EKS) → Production Pod
 ```
 
 1. **Local Development**: Code modifications in `wordpress/` folder
 2. **GitHub**: Version control repository
-3. **Kubernetes**: EKS cluster with WordPress deployment
-4. **Production Pod**: Running WordPress instance (`dp-prueba12`)
+3. **EC2 Server**: Ubuntu instance with EFS mounted at `/var/efsAutecos/wpprueba12/`
+4. **Kubernetes**: EKS cluster with WordPress deployment (`dp-prueba12`)
+5. **Production Pod**: Running WordPress instance (`dp-prueba12`) mounting EFS volume
+
+**Important**: The deployment uses a shared EFS volume mounted on an EC2 instance. Files must be uploaded to `/tmp` on EC2 first (due to permissions), then moved to EFS with sudo, and finally the deployment is restarted.
 
 ## Deployment Workflow
 
@@ -117,55 +120,124 @@ Scopes:
 
 ### Step 4: Deploy to Kubernetes Server
 
-#### Option A: Using PowerShell Script (Recommended)
+**IMPORTANT**: The deployment uses a shared EFS volume mounted on an EC2 instance. Files must be uploaded to `/tmp` on EC2 first (due to permissions), then moved to EFS with sudo.
 
-Use the existing `copy-theme.ps1` script:
+#### Method: Upload via PuTTY (pscp) and plink
+
+**Server Details:**
+- EC2 IP: `44.201.232.70`
+- User: `ubuntu`
+- Key: `D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk`
+- EFS Path: `/var/efsAutecos/wpprueba12/`
+
+##### Step 4.1: Upload Files to EC2 Server (to /tmp)
+
+Use `pscp.exe` from PuTTY to upload files to the temporary folder on EC2:
 
 ```powershell
-# Copy all theme files to the pod
-powershell.exe -ExecutionPolicy Bypass -File copy-theme.ps1
+# Upload a single file to /tmp
+& "C:\Program Files\PuTTY\pscp.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "wordpress/wp-content/themes/eunolms/css/user-profile.css" `
+  "ubuntu@44.201.232.70:/tmp/user-profile.css"
+
+# Upload multiple files
+& "C:\Program Files\PuTTY\pscp.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "wordpress/wp-content/themes/eunolms/js/user-profile.js" `
+  "ubuntu@44.201.232.70:/tmp/user-profile.js"
 ```
 
-**Script content (`copy-theme.ps1`):**
-```powershell
-$podName = kubectl get pods -n plataformas -l app=wpprueba12 -o jsonpath='{.items[0].metadata.name}'
-$themePath = "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KUBERNETES\pruebas2025\MCPGML\wordpress\wp-content\themes\eunolms"
+##### Step 4.2: Move Files to EFS (with sudo)
 
-Get-ChildItem -Path $themePath -Recurse -File | ForEach-Object {
-    $relativePath = $_.FullName.Substring($themePath.Length + 1).Replace('\', '/')
-    Write-Host "Copiando: $relativePath"
-    Get-Content $_.FullName | kubectl exec -i -n plataformas $podName -- sh -c "cat > /var/www/html/wp-content/themes/eunolms/$relativePath"
+Use `plink.exe` to execute commands on the remote server with sudo privileges:
+
+```powershell
+# Move CSS file to theme folder
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "sudo mv /tmp/user-profile.css /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/css/user-profile.css"
+
+# Set correct permissions
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "sudo chmod 644 /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/css/user-profile.css"
+
+# Move JS file
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "sudo mv /tmp/user-profile.js /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/js/user-profile.js"
+
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "sudo chmod 644 /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/js/user-profile.js"
+```
+
+##### Step 4.3: Upload Plugin Files
+
+```powershell
+# Upload plugin file
+& "C:\Program Files\PuTTY\pscp.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "wordpress/wp-content/plugins/lmseu-mcp-abilities/includes/new-feature.php" `
+  "ubuntu@44.201.232.70:/tmp/new-feature.php"
+
+# Move to plugin folder
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "sudo mv /tmp/new-feature.php /var/efsAutecos/wpprueba12/wp-content/plugins/lmseu-mcp-abilities/includes/new-feature.php"
+
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "sudo chmod 644 /var/efsAutecos/wpprueba12/wp-content/plugins/lmseu-mcp-abilities/includes/new-feature.php"
+```
+
+#### Automated Deployment Script (deploy.ps1)
+
+Create a PowerShell script to automate the entire deployment process:
+
+```powershell
+# deploy.ps1 - Deployment automation script
+$pscpPath = "C:\Program Files\PuTTY\pscp.exe"
+$plinkPath = "C:\Program Files\PuTTY\plink.exe"
+$keyPath = "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk"
+$ec2User = "ubuntu"
+$ec2Host = "44.201.232.70"
+$efsPath = "/var/efsAutecos/wpprueba12"
+
+# Files to deploy (update this list as needed)
+$filesToDeploy = @{
+    "wordpress/wp-content/themes/eunolms/css/user-profile.css" = "wp-content/themes/eunolms/css/user-profile.css"
+    "wordpress/wp-content/themes/eunolms/js/user-profile.js" = "wp-content/themes/eunolms/js/user-profile.js"
 }
 
-Write-Host "Copia completada"
-```
+Write-Host "=== Starting Deployment ===" -ForegroundColor Green
 
-#### Option B: Using kubectl cp
-
-```bash
-# Copy specific file
-kubectl cp -n plataformas wordpress/wp-content/themes/eunolms/css/style.css \
-  dp-prueba12-xxxxx-xxxxx:/var/www/html/wp-content/themes/eunolms/css/style.css
-
-# Copy entire directory
-kubectl cp -n plataformas wordpress/wp-content/themes/eunolms \
-  dp-prueba12-xxxxx-xxxxx:/var/www/html/wp-content/themes/eunolms
-```
-
-#### Option C: Copying Plugin Files
-
-```powershell
-# Plugin copy script
-$podName = kubectl get pods -n plataformas -l app=wpprueba12 -o jsonpath='{.items[0].metadata.name}'
-$pluginPath = "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KUBERNETES\pruebas2025\MCPGML\wordpress\wp-content\plugins\lmseu-mcp-abilities"
-
-Get-ChildItem -Path $pluginPath -Recurse -File | ForEach-Object {
-    $relativePath = $_.FullName.Substring($pluginPath.Length + 1).Replace('\', '/')
-    Write-Host "Copiando: $relativePath"
-    Get-Content $_.FullName | kubectl exec -i -n plataformas $podName -- sh -c "cat > /var/www/html/wp-content/plugins/lmseu-mcp-abilities/$relativePath"
+foreach ($localFile in $filesToDeploy.Keys) {
+    $remoteFile = $filesToDeploy[$localFile]
+    $tempFile = Split-Path -Leaf $localFile
+    $destPath = "$efsPath/$remoteFile"
+    
+    Write-Host "Uploading: $localFile" -ForegroundColor Yellow
+    
+    # Upload to /tmp
+    & $pscpPath -batch -i $keyPath $localFile "$ec2User@$ec2Host`:/tmp/$tempFile"
+    
+    if ($LASTEXITCODE -eq 0) {
+        # Move to destination with sudo
+        & $plinkPath -batch -i $keyPath "$ec2User@$ec2Host" "sudo mv /tmp/$tempFile $destPath"
+        & $plinkPath -batch -i $keyPath "$ec2User@$ec2Host" "sudo chmod 644 $destPath"
+        
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "  ✓ Successfully deployed" -ForegroundColor Green
+        } else {
+            Write-Host "  ✗ Failed to move file" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "  ✗ Failed to upload" -ForegroundColor Red
+    }
 }
 
-Write-Host "Copia completada"
+Write-Host "=== Deployment Complete ===" -ForegroundColor Green
+Write-Host ""
+Write-Host "To restart the deployment, run:" -ForegroundColor Cyan
+Write-Host "kubectl rollout restart deployment dp-prueba12 -n plataformas" -ForegroundColor Yellow
+```
+
+**Usage:**
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File deploy.ps1
 ```
 
 ### Step 5: Restart Deployment
@@ -201,12 +273,16 @@ dp-prueba12-6d489889b7-wvrgj   1/1     Running   0          1m
 #### A. Verify Files are Deployed
 
 ```bash
-# Check specific file exists on pod
+# Check file exists on NFS server
+kubectl exec -it nfs-server-pl-7bd8cb75c6-m6tdr -- \
+  ls -la /exports/wpprueba/wp-content/themes/eunolms/css/user-profile.css
+
+# Check file exists on WordPress pod
 kubectl exec -n plataformas dp-prueba12-xxxxx-xxxxx -- \
   ls -la /var/www/html/wp-content/themes/eunolms/css/user-profile.css
 
-# Verify file content (Windows PowerShell)
-kubectl exec -n plataformas dp-prueba12-xxxxx-xxxxx -- sh -c "cat /var/www/html/wp-content/themes/eunolms/css/user-profile.css" | Select-String -Pattern "tab-pane.active"
+# Verify file content
+kubectl exec -it nfs-server-pl-7bd8cb75c6-m6tdr -- sh -c "cat /exports/wpprueba/wp-content/themes/eunolms/css/user-profile.css"
 ```
 
 #### B. Check Pod Logs
@@ -247,7 +323,7 @@ kubectl exec -n plataformas dp-prueba12-xxxxx-xxxxx -- \
 
 ### Scenario 1: CSS Styling Changes
 
-```bash
+```powershell
 # 1. Modify local CSS file
 # Edit: wordpress/wp-content/themes/eunolms/css/user-profile.css
 
@@ -256,18 +332,24 @@ git add wordpress/wp-content/themes/eunolms/css/user-profile.css
 git commit -m "style(eunolms): mejorar estilos de perfil de usuario"
 git push origin master
 
-# 3. Deploy to server
-powershell.exe -ExecutionPolicy Bypass -File copy-theme.ps1
+# 3. Upload to EC2 server using pscp
+& "C:\Program Files\PuTTY\pscp.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "wordpress/wp-content/themes/eunolms/css/user-profile.css" `
+  "ubuntu@44.201.232.70:/tmp/user-profile.css"
 
-# 4. Restart deployment (optional for CSS changes, but recommended)
-kubectl rollout restart deployment -n plataformas dp-prueba12
+# 4. Move to EFS with sudo using plink
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "sudo mv /tmp/user-profile.css /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/css/user-profile.css && sudo chmod 644 /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/css/user-profile.css"
 
-# 5. Verify in browser
+# 5. Restart deployment to apply changes
+kubectl rollout restart deployment dp-prueba12 -n plataformas
+
+# 6. Verify in browser
 ```
 
 ### Scenario 2: New Feature Development
 
-```bash
+```powershell
 # 1. Create new PHP file
 # Create: wordpress/wp-content/plugins/lmseu-mcp-abilities/includes/new-feature.php
 
@@ -279,22 +361,35 @@ git add wordpress/wp-content/
 git commit -m "feat(lmseu): agregar nueva funcionalidad para gestión de usuarios"
 git push origin master
 
-# 4. Deploy to server (both theme and plugin)
-# Use copy-theme.ps1 for theme files
-# Use plugin-specific copy script for plugin files
+# 4. Upload JS file to EC2
+& "C:\Program Files\PuTTY\pscp.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "wordpress/wp-content/themes/eunolms/js/new-feature.js" `
+  "ubuntu@44.201.232.70:/tmp/new-feature.js"
 
-# 5. Restart deployment
-kubectl rollout restart deployment -n plataformas dp-prueba12
+# 5. Upload PHP file to EC2
+& "C:\Program Files\PuTTY\pscp.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "wordpress/wp-content/plugins/lmseu-mcp-abilities/includes/new-feature.php" `
+  "ubuntu@44.201.232.70:/tmp/new-feature.php"
 
-# 6. Verify functionality
+# 6. Move files to EFS with sudo
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "sudo mv /tmp/new-feature.js /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/js/new-feature.js && sudo chmod 644 /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/js/new-feature.js"
+
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "sudo mv /tmp/new-feature.php /var/efsAutecos/wpprueba12/wp-content/plugins/lmseu-mcp-abilities/includes/new-feature.php && sudo chmod 644 /var/efsAutecos/wpprueba12/wp-content/plugins/lmseu-mcp-abilities/includes/new-feature.php"
+
+# 7. Restart deployment
+kubectl rollout restart deployment dp-prueba12 -n plataformas
+
+# 8. Verify functionality
 ```
 
 ### Scenario 3: Bug Fix
 
-```bash
-# 1. Download file from server if needed
-kubectl cp -n plataformas dp-prueba12-xxxxx:/var/www/html/wp-content/themes/eunolms/functions.php \
-  wordpress/wp-content/themes/eunolms/functions.php
+```powershell
+# 1. Download file from EFS server if needed
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "sudo cat /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/functions.php" > wordpress/wp-content/themes/eunolms/functions.php
 
 # 2. Fix the bug locally
 # Edit: wordpress/wp-content/themes/eunolms/functions.php
@@ -304,13 +399,19 @@ git add wordpress/wp-content/themes/eunolms/functions.php
 git commit -m "fix(eunolms): corregir error en cálculo de progreso"
 git push origin master
 
-# 4. Deploy to server
-powershell.exe -ExecutionPolicy Bypass -File copy-theme.ps1
+# 4. Upload to EC2
+& "C:\Program Files\PuTTY\pscp.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "wordpress/wp-content/themes/eunolms/functions.php" `
+  "ubuntu@44.201.232.70:/tmp/functions.php"
 
-# 5. Restart deployment
-kubectl rollout restart deployment -n plataformas dp-prueba12
+# 5. Move to EFS with sudo
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "sudo mv /tmp/functions.php /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/functions.php && sudo chmod 644 /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/functions.php"
 
-# 6. Verify fix works
+# 6. Restart deployment
+kubectl rollout restart deployment dp-prueba12 -n plataformas
+
+# 7. Verify fix works
 ```
 
 ## Quick Reference Commands
@@ -346,17 +447,23 @@ git commit -m "type(scope): description"
 git push origin master
 ```
 
-### Deployment Scripts
+### Deployment Commands (PuTTY - pscp/plink)
 ```powershell
-# Copy theme files
-powershell.exe -ExecutionPolicy Bypass -File copy-theme.ps1
+# Upload single file to EC2
+& "C:\Program Files\PuTTY\pscp.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "wordpress/wp-content/themes/eunolms/css/style.css" `
+  "ubuntu@44.201.232.70:/tmp/style.css"
 
-# Or inline
-$podName = kubectl get pods -n plataformas -l app=wpprueba12 -o jsonpath='{.items[0].metadata.name}'
-Get-ChildItem -Path "wordpress\wp-content\themes\eunolms" -Recurse -File | ForEach-Object {
-    $relativePath = $_.FullName.Substring($themePath.Length + 1).Replace('\', '/')
-    Get-Content $_.FullName | kubectl exec -i -n plataformas $podName -- sh -c "cat > /var/www/html/wp-content/themes/eunolms/$relativePath"
-}
+# Move file to EFS with sudo
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "sudo mv /tmp/style.css /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/css/style.css && sudo chmod 644 /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/css/style.css"
+
+# Deploy multiple files using script
+powershell.exe -ExecutionPolicy Bypass -File copy-changed-files.ps1
+
+# Download file from EFS
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "sudo cat /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/functions.php" > wordpress/wp-content/themes/eunolms/functions.php
 ```
 
 ## Troubleshooting
@@ -366,27 +473,80 @@ Get-ChildItem -Path "wordpress\wp-content\themes\eunolms" -Recurse -File | ForEa
 **Symptoms**: Changes not visible on production
 
 **Solutions**:
-1. Verify pod name is correct
-2. Check file paths in copy script
-3. Verify permissions on pod
-4. Check kubectl connection to cluster
+1. Verify EC2 connection with PuTTY
+2. Check file paths in script
+3. Verify SSH key permissions
+4. Check EFS mount on EC2
+5. Verify sudo passwordless access for ubuntu user
 
-```bash
-# Check pod is running
-kubectl get pods -n plataformas -l app=wpprueba12
+```powershell
+# Test SSH connection to EC2
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "echo 'Connection successful'"
 
-# Verify file exists on pod
-kubectl exec -n platforms dp-prueba12-xxxxx -- ls -la /var/www/html/wp-content/themes/eunolms/
+# Check if EFS is mounted
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "df -h | grep efs"
+
+# Verify file exists on EFS
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "ls -la /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/"
+```
+
+### Issue: PSCP Upload Failing
+
+**Symptoms**: pscp.exe cannot upload files to EC2
+
+**Solutions**:
+1. Verify PuTTY installation path
+2. Check SSH key format (.ppk)
+3. Verify network connectivity
+4. Check EC2 security group allows SSH (port 22)
+5. Verify file exists locally
+
+```powershell
+# Test pscp with a simple file
+& "C:\Program Files\PuTTY\pscp.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "README.md" "ubuntu@44.201.232.70:/tmp/test-upload.txt"
+
+# Check if file was uploaded
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "ls -la /tmp/test-upload.txt"
+```
+
+### Issue: Sudo Commands Failing
+
+**Symptoms**: Cannot move files from /tmp to EFS with sudo
+
+**Solutions**:
+1. Verify ubuntu user has sudo privileges
+2. Check /tmp directory permissions
+3. Verify EFS directory permissions
+4. Check sudoers configuration
+
+```powershell
+# Test sudo access
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "sudo whoami"
+
+# Check EFS directory permissions
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "ls -la /var/efsAutecos/wpprueba12/wp-content/themes/eunolms/"
+
+# Check /tmp permissions
+& "C:\Program Files\PuTTY\plink.exe" -batch -i "D:\PROYECTOS TI2\EUNO\PLATAFORMAS\AWS\KEYS\KEY-WPLMSEUNO.ppk" `
+  "ubuntu@44.201.232.70" "ls -la /tmp/"
 ```
 
 ### Issue: Deployment Not Restarting
 
-**Symptoms**: Pod stuck in restarting state
+**Symptoms**: Pod stuck in restarting state or changes not applying
 
 **Solutions**:
 1. Check rollout status
 2. Review pod logs
 3. Verify deployment configuration
+4. Ensure EFS volume is properly mounted
 
 ```bash
 # Check rollout status
@@ -397,6 +557,9 @@ kubectl describe pod -n plataformas dp-prueba12-xxxxx
 
 # Check logs
 kubectl logs -n plataformas dp-prueba12-xxxxx --previous
+
+# Verify EFS mount in pod
+kubectl exec -n plataformas dp-prueba12-xxxxx -- df -h | grep html
 ```
 
 ### Issue: Git Push Failing
@@ -407,6 +570,7 @@ kubectl logs -n plataformas dp-prueba12-xxxxx --previous
 1. Check remote URL
 2. Verify credentials
 3. Check network connection
+4. Verify branch name
 
 ```bash
 # Check remote
@@ -414,6 +578,30 @@ git remote -v
 
 # Test connection
 git ls-remote origin
+
+# Verify current branch
+git branch
+
+# Check if origin/master exists
+git branch -r
+```
+
+### Issue: Changes Not Visible in Browser
+
+**Symptoms**: Files deployed but changes not visible
+
+**Solutions**:
+1. Clear browser cache (Ctrl+F5)
+2. Check WordPress cache plugins
+3. Verify deployment was restarted
+4. Check CDN if applicable
+
+```bash
+# Clear WordPress cache via WP-CLI
+kubectl exec -n plataformas dp-prueba12-xxxxx -- wp cache flush --allow-root
+
+# Check if pod restarted successfully
+kubectl get pods -n plataformas -l app=wpprueba12 --sort-by=.metadata.creationTimestamp
 ```
 
 ## Best Practices

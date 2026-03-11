@@ -47,13 +47,23 @@ function eunolms_widgets_init() {
 add_action( 'widgets_init', 'eunolms_widgets_init' );
 
 function eunolms_scripts() {
+    // Get file modification times for versioning
+    $css_file = get_template_directory() . '/css/user-profile.css';
+    $css_version = file_exists( $css_file ) ? filemtime( $css_file ) : '2.0.0';
+    
+    $js_file = get_template_directory() . '/js/user-profile.js';
+    $js_version = file_exists( $js_file ) ? filemtime( $js_file ) : '2.0.0';
+    
     wp_enqueue_style( 'eunolms-style', get_stylesheet_uri() );
-    wp_enqueue_style( 'eunolms-user-profile', get_template_directory_uri() . '/css/user-profile.css' );
+    
+    // Enqueue user profile CSS with version
+    wp_enqueue_style( 'eunolms-user-profile', get_template_directory_uri() . '/css/user-profile.css', array(), $css_version );
+    
     wp_enqueue_script( 'eunolms-header', get_template_directory_uri() . '/js/header.js', array(), '1.0.0', true );
     
-    // Enqueue user profile script on profile page
+    // Enqueue user profile script on profile page with version
     if ( is_page( 'mi-perfil' ) ) {
-        wp_enqueue_script( 'eunolms-user-profile', get_template_directory_uri() . '/js/user-profile.js', array('jquery'), '1.0.0', true );
+        wp_enqueue_script( 'eunolms-user-profile', get_template_directory_uri() . '/js/user-profile.js', array('jquery'), $js_version, true );
         wp_localize_script( 'eunolms-user-profile', 'wpApiSettings', array(
             'root' => esc_url_raw( rest_url() ),
             'nonce' => wp_create_nonce( 'wp_rest' ),
@@ -108,12 +118,49 @@ function eunolms_get_user_courses_by_status() {
             $progress = isset( $course_progress['percentage'] ) ? $course_progress['percentage'] : 0;
         }
 
+        // Get lesson count
+        $lessons_count = 0;
+        if ( function_exists( 'learndash_get_lesson_list' ) ) {
+            $lessons = learndash_get_lesson_list( $course_id );
+            $lessons_count = is_array( $lessons ) ? count( $lessons ) : 0;
+        }
+
+        // Get course duration from meta
+        $duration = get_post_meta( $course_id, '_duration', true );
+        if ( empty( $duration ) ) {
+            // Try alternate meta keys
+            $duration = get_post_meta( $course_id, 'course_duration', true );
+        }
+        
+        // Format duration if needed
+        if ( ! empty( $duration ) && is_numeric( $duration ) ) {
+            $hours = floor( $duration / 60 );
+            $minutes = $duration % 60;
+            if ( $hours > 0 ) {
+                $duration = sprintf( '%dh %dm', $hours, $minutes );
+            } else {
+                $duration = sprintf( '%dm', $minutes );
+            }
+        }
+
+        // Get enrolled students count
+        $students_count = 0;
+        if ( function_exists( 'learndash_get_course_users_enrolled_count' ) ) {
+            $students_count = learndash_get_course_users_enrolled_count( $course_id );
+        } elseif ( function_exists( 'learndash_get_users_for_course' ) ) {
+            $students = learndash_get_users_for_course( $course_id, array() );
+            $students_count = is_array( $students ) ? count( $students ) : 0;
+        }
+
         $course_data = array(
-            'id'        => $course_id,
-            'title'     => $course_post->post_title,
-            'permalink' => get_permalink( $course_id ),
-            'image'     => get_the_post_thumbnail_url( $course_id, 'medium' ),
-            'progress'  => $progress,
+            'id'             => $course_id,
+            'title'          => $course_post->post_title,
+            'permalink'      => get_permalink( $course_id ),
+            'image'          => get_the_post_thumbnail_url( $course_id, 'medium' ),
+            'progress'       => $progress,
+            'lessons_count'  => $lessons_count,
+            'duration'       => $duration,
+            'students_count' => $students_count,
         );
 
         if ( $course_status === 'completed' ) {
