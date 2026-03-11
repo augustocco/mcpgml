@@ -1,0 +1,88 @@
+/* Estilos para Meta Box de Branding del Cliente */
+
+.euno-branding-meta-box {
+    padding: 10px;
+}
+
+.euno-branding-meta-box .euno-field {
+    margin-bottom: 20px;
+}
+
+.euno-branding-meta-box label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.euno-branding-meta-box .description {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+/* Campo de subida de archivos */
+.euno-file-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.euno-file-upload input[type="text"] {
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.euno-file-upload .button {
+    margin-bottom: 5px;
+}
+
+/* Previsualización de imagen */
+.euno-image-preview {
+    margin-top: 10px;
+}
+
+.euno-image-preview img {
+    max-width: 100%;
+    max-height: 100px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    display: block;
+}
+
+/* Campo de color */
+.euno-color-field {
+    margin-bottom: 15px;
+}
+
+.euno-color-field label {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.euno-color-field input[type="color"] {
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 2px 5px;
+    vertical-align: middle;
+}
+
+.euno-color-field .euno-color-value {
+    display: inline-block;
+    font-family: monospace;
+    font-size: 12px;
+    color: #666;
+    margin-left: 10px;
+}
+
+/* Preview de colores */
+.euno-color-preview {
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Ajustes para respuesta rápida */
+.inline-edit-row .euno-branding-meta-box .euno-field,
+.inline-edit-row .euno-branding-meta-box .euno-color-field {
+    margin-bottom: 10px;
+}

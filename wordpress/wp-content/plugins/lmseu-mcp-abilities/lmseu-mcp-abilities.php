@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LMSEU MCP Abilities
  * Description: Registro de habilidades personalizadas para el MCP Adapter de WordPress.
- * Version: 2.8.0
+ * Version: 2.9.1
  * Author: Augusto César Cañola Ortiz
  */
 
@@ -39,10 +39,13 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-reports-dashboard.php
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-global-filters.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-storage-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-learndash-manager.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-branding-manager.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-branding-meta-box.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-mcp-http-auth.php';
 
 add_action( 'plugins_loaded', array( 'LMSEU_Client_Storage_Manager', 'init' ) );
 add_action( 'plugins_loaded', array( 'LMSEU_Client_LearnDash_Manager', 'init' ) );
+add_action( 'plugins_loaded', array( 'LMSEU_Client_Branding_Manager', 'init' ) );
 
 add_action( 'init', function() {
     if ( ! get_page_by_path( 'ayuda' ) ) {
@@ -120,5 +123,35 @@ add_action( 'wp_abilities_api_init', function() {
     if ( file_exists( $wordpress_file ) ) {
         require_once $wordpress_file;
         LMSEU_WordPress_Abilities::register();
+    }
+}, 10 );
+
+// Enqueue scripts del meta box solo en la pantalla de edición de grupos
+add_action( 'admin_enqueue_scripts', function( $hook ) {
+    // Solo en la pantalla de edición de grupos de LearnDash
+    if ( strpos( $hook, 'post.php' ) !== false ) {
+        $post = get_post();
+        if ( $post && get_post_type( $post ) === 'groups' ) {
+            wp_enqueue_style(
+                'euno-branding-meta-box',
+                plugin_dir_url( __FILE__ ) . 'css/euno-branding-meta-box.css',
+                array(),
+                '1.0.0'
+            );
+            
+            wp_enqueue_script(
+                'euno-branding-meta-box',
+                plugin_dir_url( __FILE__ ) . 'js/euno-branding-meta-box.js',
+                array( 'jquery', 'media-editor' ),
+                '1.0.0',
+                true
+            );
+            
+            // Pasar strings de texto para el script
+            wp_localize_script( 'euno-branding-meta-box', 'eunoBrandingMetaBox', array(
+                'title' => __( 'Configuración de Branding del Cliente', 'lmseu-mcp-abilities' ),
+                'button' => __( 'Seleccionar imagen', 'lmseu-mcp-abilities' )
+            ) );
+        }
     }
 }, 10 );
