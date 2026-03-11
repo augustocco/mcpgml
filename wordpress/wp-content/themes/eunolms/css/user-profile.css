@@ -490,6 +490,98 @@
 }
 
 /* ============================================
+   Course Action Buttons
+   ============================================ */
+.course-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: var(--euno-radius-md);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    text-decoration: none;
+    transition: var(--euno-transition);
+    cursor: pointer;
+    border: 2px solid transparent;
+    margin-top: 16px;
+    position: relative;
+    z-index: 2;
+}
+
+.course-action-btn i {
+    font-size: 14px;
+    transition: var(--euno-transition);
+}
+
+/* Button Start - Green */
+.course-action-btn.btn-start {
+    background-color: var(--euno-success);
+    color: #ffffff;
+    border-color: var(--euno-success);
+}
+
+.course-action-btn.btn-start:hover {
+    background-color: var(--euno-success-dark);
+    border-color: var(--euno-success-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.course-action-btn.btn-start:hover i {
+    transform: translateX(2px);
+}
+
+/* Button Continue - Blue */
+.course-action-btn.btn-continue {
+    background-color: var(--euno-primary);
+    color: #ffffff;
+    border-color: var(--euno-primary);
+}
+
+.course-action-btn.btn-continue:hover {
+    background-color: var(--euno-primary-dark);
+    border-color: var(--euno-primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.course-action-btn.btn-continue:hover i {
+    transform: translateX(3px);
+}
+
+/* Button View - Outline Style */
+.course-action-btn.btn-view {
+    background-color: transparent;
+    color: var(--euno-text-secondary);
+    border-color: var(--euno-border);
+}
+
+.course-action-btn.btn-view:hover {
+    background-color: var(--euno-bg-tertiary);
+    color: var(--euno-text-primary);
+    border-color: var(--euno-text-muted);
+}
+
+.course-action-btn.btn-view:hover i {
+    transform: scale(1.1);
+}
+
+/* Completed Card Button Override */
+.course-card.completed .course-action-btn.btn-view {
+    border-color: var(--euno-success);
+    color: var(--euno-success);
+}
+
+.course-card.completed .course-action-btn.btn-view:hover {
+    background-color: var(--euno-success);
+    color: #ffffff;
+}
+
+/* ============================================
    Loading State
    ============================================ */
 .loading-spinner {

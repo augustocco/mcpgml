@@ -99,26 +99,115 @@
             let gridHtml = '<div class="course-grid">';
             
             courses.forEach(function(course) {
-                let cardHtml = `
-                    <div class="course-card">
-                        <a href="${course.permalink}">
-                            <img src="${course.image || 'https://via.placeholder.com/400x300?text=Curso'}" 
-                                 alt="${course.title}" 
-                                 onerror="this.src='https://via.placeholder.com/400x300?text=Curso'">
-                            <h3>${course.title}</h3>
-                `;
+                // Determine status badge class and text
+                let statusClass = 'not-started';
+                let statusText = 'Sin iniciar';
+                
+                if (status === 'en-progreso' || (course.progress && course.progress > 0)) {
+                    statusClass = 'in-progress';
+                    statusText = 'En progreso';
+                } else if (status === 'completados' || (course.progress && course.progress >= 100)) {
+                    statusClass = 'completed';
+                    statusText = 'Completado';
+                }
 
-                // Add progress bar for in-progress courses
-                if (status === 'en-progreso' && course.progress !== undefined) {
-                    cardHtml += `
-                            <div class="course-progress-bar">
-                                <div class="progress" style="width: ${course.progress}%;"></div>
-                            </div>
+                // Determine card class for completed styling
+                let cardClass = '';
+                if (statusClass === 'completed') {
+                    cardClass = 'completed';
+                }
+
+                // Format progress percentage
+                let progressPercentage = course.progress || 0;
+                if (status === 'completados') {
+                    progressPercentage = 100;
+                }
+
+                // Determine button based on status
+                let buttonText = '';
+                let buttonClass = 'course-action-btn';
+                let buttonIcon = '';
+
+                if (status === 'sin-iniciar') {
+                    buttonText = 'Iniciar';
+                    buttonClass += ' btn-start';
+                    buttonIcon = '<i class="fas fa-play"></i>';
+                } else if (status === 'en-progreso') {
+                    buttonText = 'Continuar';
+                    buttonClass += ' btn-continue';
+                    buttonIcon = '<i class="fas fa-arrow-right"></i>';
+                } else if (status === 'completados') {
+                    buttonText = 'Ver Contenido';
+                    buttonClass += ' btn-view';
+                    buttonIcon = '<i class="fas fa-eye"></i>';
+                }
+
+                // Generate metadata HTML
+                let metadataHtml = '';
+                if (course.lessons_count !== undefined) {
+                    metadataHtml += `
+                        <div class="metadata-item">
+                            <i class="fas fa-book"></i>
+                            <span>${course.lessons_count} lecciones</span>
+                        </div>
+                    `;
+                }
+                if (course.duration) {
+                    metadataHtml += `
+                        <div class="metadata-item">
+                            <i class="fas fa-clock"></i>
+                            <span>${course.duration}</span>
+                        </div>
+                    `;
+                }
+                if (course.students_count !== undefined) {
+                    metadataHtml += `
+                        <div class="metadata-item">
+                            <i class="fas fa-users"></i>
+                            <span>${course.students_count} estudiantes</span>
+                        </div>
                     `;
                 }
 
+                let cardHtml = `
+                    <div class="course-card ${cardClass}">
+                        <a href="${course.permalink}">
+                            <div class="image-container">
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                                <img src="${course.image}" 
+                                     alt="${course.title}" 
+                                     onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
+                                <div class="image-overlay"></div>
+                            </div>
+                            <div class="course-content">
+                                <h3>${course.title}</h3>
+                `;
+
+                // Add metadata if available
+                if (metadataHtml) {
+                    cardHtml += `
+                                <div class="course-metadata">
+                                    ${metadataHtml}
+                                </div>
+                    `;
+                }
+
+                // Add progress section
                 cardHtml += `
-                        </a>
+                                <div class="progress-section">
+                                    <div class="progress-header">
+                                        <span class="progress-label">Progreso</span>
+                                        <span class="progress-percentage">${progressPercentage}%</span>
+                                    </div>
+                                    <div class="course-progress-bar">
+                                        <div class="progress" style="width: ${progressPercentage}%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="${course.permalink}" class="${buttonClass}">
+                                ${buttonIcon}
+                                <span>${buttonText}</span>
+                            </a>
                     </div>
                 `;
                 
