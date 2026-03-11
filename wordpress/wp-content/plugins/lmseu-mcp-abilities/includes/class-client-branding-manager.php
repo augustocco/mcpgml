@@ -45,9 +45,10 @@ class LMSEU_Client_Branding_Manager {
         // Obtener el logo como Featured Image
         $logo_url = get_the_post_thumbnail_url( $parent_group_id, 'full' );
 
-        // Si no hay featured image, usar logo por defecto
+        // Si no hay featured image, usar logo configurado en el tema
         if ( ! $logo_url ) {
-            $logo_url = 'https://eks12.lmseunoconsulting.com/wp-content/uploads/2026/03/euno2025.png';
+            $custom_logo_id = get_theme_mod( 'custom_logo' );
+            $logo_url = $custom_logo_id ? wp_get_attachment_image_url( $custom_logo_id, 'full' ) : '';
         }
 
         // Obtener isotipo del metacampo
@@ -165,7 +166,7 @@ class LMSEU_Client_Branding_Manager {
      */
     public static function get_default_branding() {
         return array(
-            'logo_url' => 'https://eks12.lmseunoconsulting.com/wp-content/uploads/2026/03/euno2025.png',
+            'logo_url' => ( ( $cid = get_theme_mod( 'custom_logo' ) ) ? wp_get_attachment_image_url( $cid, 'full' ) : '' ),
             'isotype_url' => '',
             'color_primary' => self::DEFAULT_COLORS['primary'],
             'color_secondary' => self::DEFAULT_COLORS['secondary'],

@@ -17,7 +17,7 @@ class LMSEU_Branding {
     public static function get_company_logo_url() {
         // Logo por defecto (EUNO)
         $custom_logo_id = get_theme_mod( 'custom_logo' );
-        $default_logo = $custom_logo_id ? wp_get_attachment_image_url( $custom_logo_id, 'full' ) : 'https://eks10.lmseunoconsulting.com/wp-content/uploads/2026/03/euno2025-2048x614-1.png';
+        $default_logo = $custom_logo_id ? wp_get_attachment_image_url( $custom_logo_id, 'full' ) : '';
 
         if ( ! is_user_logged_in() ) {
             return $default_logo;

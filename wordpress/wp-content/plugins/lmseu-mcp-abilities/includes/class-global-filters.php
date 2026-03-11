@@ -349,7 +349,11 @@ class LMSEU_Global_Filters {
 
     public static function fallback_thumbnail_html( $html, $post_id, $post_thumbnail_id, $size, $attr ) {
         if ( empty( $html ) && 'sfwd-courses' === get_post_type( $post_id ) ) {
-            $default_image_url = 'https://eks10.lmseunoconsulting.com/wp-content/uploads/2026/03/EnConstruccion.webp';
+            $default_image_id  = get_option( 'euno_default_course_image_id' );
+            $default_image_url = $default_image_id ? wp_get_attachment_url( $default_image_id ) : '';
+            if ( ! $default_image_url ) {
+                return $html;
+            }
             return '<img src="' . esc_url($default_image_url) . '" alt="En Construcción" />';
         }
         return $html;

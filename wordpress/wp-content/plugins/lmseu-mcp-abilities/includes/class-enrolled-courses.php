@@ -61,7 +61,7 @@ class LMSEU_Enrolled_Courses {
             }
 
             $default_image_id = get_option( 'euno_default_course_image_id' );
-            $default_image_url = 'https://eks10.lmseunoconsulting.com/wp-content/uploads/2026/03/EnConstruccion.webp';
+            $default_image_url = $default_image_id ? wp_get_attachment_url( $default_image_id ) : '';
 
             $cert_link = '';
             if ( function_exists('learndash_get_course_certificate_link') ) {

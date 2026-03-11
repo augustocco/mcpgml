@@ -16,7 +16,7 @@
                 <?php 
                 $logo_url = ( class_exists('LMSEU_Branding') ) 
                     ? LMSEU_Branding::get_company_logo_url() 
-                    : 'https://eks10.lmseunoconsulting.com/wp-content/uploads/2026/03/euno2025-2048x614-1.png';
+                    : ( ( $cid = get_theme_mod( 'custom_logo' ) ) ? wp_get_attachment_image_url( $cid, 'full' ) : '' );
                 ?>
                 <img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php bloginfo( 'name' ); ?>">
             </a>
