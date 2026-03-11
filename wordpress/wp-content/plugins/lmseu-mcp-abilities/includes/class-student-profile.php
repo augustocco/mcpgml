@@ -91,6 +91,48 @@ class LMSEU_Student_Profile {
         // Stats
         $total_enrolled = count($enrolled_course_ids);
         $total_completed = count($completed_courses);
+
+        // Cursos del grupo padre (cliente) vs cursos asignados al usuario
+        $parent_group_courses_total = 0;
+        $parent_group_courses_assigned = 0;
+
+        if ( function_exists( 'learndash_group_enrolled_courses' ) ) {
+            $parent_group_id = 0;
+
+            if ( class_exists( 'LMSEU_Client_Branding_Manager' ) ) {
+                $parent_group_id = (int) LMSEU_Client_Branding_Manager::get_client_parent_group( $user_id );
+            }
+
+            if ( empty( $parent_group_id ) && function_exists( 'learndash_get_users_group_ids' ) ) {
+                $user_group_ids = learndash_get_users_group_ids( $user_id );
+
+                if ( ! empty( $user_group_ids ) ) {
+                    foreach ( $user_group_ids as $group_id ) {
+                        $parent_id = (int) wp_get_post_parent_id( $group_id );
+                        if ( 0 === $parent_id ) {
+                            $parent_group_id = (int) $group_id;
+                            break;
+                        }
+
+                        if ( $parent_id > 0 ) {
+                            $parent_group_id = $parent_id;
+                        }
+                    }
+                }
+            }
+
+            if ( $parent_group_id > 0 ) {
+                $parent_group_courses = learndash_group_enrolled_courses( $parent_group_id );
+
+                if ( is_array( $parent_group_courses ) ) {
+                    $parent_group_courses = array_map( 'intval', $parent_group_courses );
+                    $enrolled_course_ids_int = array_map( 'intval', $enrolled_course_ids );
+
+                    $parent_group_courses_total = count( $parent_group_courses );
+                    $parent_group_courses_assigned = count( array_intersect( $enrolled_course_ids_int, $parent_group_courses ) );
+                }
+            }
+        }
         
         $group_count = 0;
         if ( function_exists( 'learndash_get_users_group_ids' ) ) {
@@ -349,7 +391,8 @@ class LMSEU_Student_Profile {
                 <div class="flex flex-wrap items-center justify-center border-t border-slate-100 bg-white">
                     <div class="flex-1 min-w-[120px] py-4 flex flex-col items-center border-r border-slate-100 last:border-r-0">
                         <i class="fas fa-book-open text-blue-500 mb-2 text-lg"></i>
-                        <p class="text-[12px] text-slate-500 font-medium">Cursos <b class="text-slate-900 ml-1"><?php echo $total_enrolled; ?></b></p>
+                        <p class="text-[12px] text-slate-500 font-medium">Cursos <b class="text-slate-900 ml-1"><?php echo $parent_group_courses_total; ?></b></p>
+                        <p class="text-[10px] text-slate-400 mt-1">Asignados: <b class="text-slate-700"><?php echo $parent_group_courses_assigned; ?></b></p>
                     </div>
                     <div class="flex-1 min-w-[120px] py-4 flex flex-col items-center border-r border-slate-100 last:border-r-0">
                         <i class="fas fa-question-circle text-blue-500 mb-2 text-lg"></i>
@@ -457,5 +500,4 @@ class LMSEU_Student_Profile {
         }
         echo '</div>';
     }
-}
-LMSEU_Student_Profile::init();
+} // Fin de la clase
