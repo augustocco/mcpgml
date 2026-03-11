@@ -1,0 +1,90 @@
+/* Perfil de Usuario */
+.user-profile-container {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.user-profile-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.user-avatar img {
+    border-radius: 50%;
+}
+
+.user-info {
+    margin-left: 1.5rem;
+}
+
+.user-name {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.user-membership-date {
+    margin: 0;
+    color: #666;
+}
+
+.user-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    padding: 1.5rem 0;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-icon {
+    font-size: 2rem;
+    color: #0073aa;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    display: block;
+    color: #666;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.user-courses-tabs .tabs-nav {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.user-courses-tabs .tabs-nav li a {
+    display: block;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    color: #666;
+    font-weight: bold;
+}
+
+.user-courses-tabs .tabs-nav li.tab-active a {
+    color: #0073aa;
+    border-bottom: 2px solid #0073aa;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}

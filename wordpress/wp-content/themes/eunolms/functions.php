@@ -48,6 +48,7 @@ add_action( 'widgets_init', 'eunolms_widgets_init' );
 
 function eunolms_scripts() {
     wp_enqueue_style( 'eunolms-style', get_stylesheet_uri() );
+    wp_enqueue_style( 'eunolms-user-profile', get_template_directory_uri() . '/css/user-profile.css' );
     wp_enqueue_script( 'eunolms-header', get_template_directory_uri() . '/js/header.js', array(), '1.0.0', true );
 }
 add_action( 'wp_enqueue_scripts', 'eunolms_scripts' );
@@ -69,3 +70,22 @@ function eunolms_redirect_home_to_profile() {
     }
 }
 add_action( 'template_redirect', 'eunolms_redirect_home_to_profile' );
+
+function eunolms_get_user_stat( $stat ) {
+    $user_id = get_current_user_id();
+    // Esta es una función de ejemplo. Necesitarás reemplazarla con tu propia lógica para obtener las estadísticas.
+    switch ( $stat ) {
+        case 'courses':
+            return 3; // Reemplazar con la lógica real
+        case 'assignments':
+            return 2; // Reemplazar con la lógica real
+        case 'quizzes':
+            return 0; // Reemplazar con la lógica real
+        case 'groups':
+            return 0; // Reemplazar con la lógica real
+        case 'certificates':
+            return 2; // Reemplazar con la lógica real
+        default:
+            return 0;
+    }
+}

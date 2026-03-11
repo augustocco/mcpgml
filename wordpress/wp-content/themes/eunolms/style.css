@@ -1,3 +1,4 @@
+/*
 Theme Name: EUNO LMS
 Theme URI: https://eunoconsulting.com
 Author: Augusto César Cañola Ortiz
@@ -8,113 +9,254 @@ License: GNU General Public License v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: eunolms
 Tags: e-commerce, two-columns, right-sidebar, accessibility-ready
+*/
+
+:root {
+    --euno-primary: #3b82f6;
+    --euno-primary-hover: #2563eb;
+    --euno-bg: #f8fafc;
+    --euno-text-main: #0f172a;
+    --euno-text-muted: #64748b;
+    --euno-border: #e2e8f0;
+    --euno-white: #ffffff;
+}
+
+@keyframes bodyFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 
 body {
-    font-family: 'Arial', sans-serif;
-    line-height: 1.6;
     margin: 0;
-    padding: 0;
-    background-color: #f4f4f4f;
-    color: #333;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: var(--euno-text-main);
+    background-color: var(--euno-bg);
 }
 
-.container {
-    max-width: 1200px;
+#euno-site-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    animation: bodyFade 0.8s ease-out forwards;
+}
+
+#euno-spa-root {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.euno-header {
+    background-color: var(--euno-white);
+    border-bottom: 1px solid var(--euno-border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.euno-header.euno-header-scrolled {
+    height: 60px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    background-color: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+}
+
+.admin-bar .euno-header {
+    top: 32px;
+}
+
+@media screen and (max-width: 782px) {
+    .admin-bar .euno-header {
+        top: 46px;
+    }
+}
+
+.euno-header-container,
+.euno-footer-container,
+.euno-container {
+    max-width: 1250px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 0 20px;
+    width: 100%;
 }
 
-header {
-    background-color: #2c3e50;
-    color: #fff;
-    padding: 20px 0;
+.euno-header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-header h1 {
-    margin: 0;
-    font-size: 2em;
+.euno-logo img {
+    max-height: 50px;
+    display: block;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-nav {
-    background-color: #34495e;
-    padding: 10px 0;
+.euno-header.euno-header-scrolled .euno-logo img {
+    max-height: 40px;
 }
 
-nav ul {
+.euno-main-nav ul {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
-    justify-content: center;
+    gap: 30px;
+    align-items: center;
 }
 
-nav ul li {
-    margin: 0 15px;
+.euno-main-nav li {
+    position: relative;
 }
 
-nav ul li a {
-    color: #fff;
+.euno-main-nav a {
     text-decoration: none;
-    font-weight: bold;
+    color: var(--euno-text-muted);
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    padding: 25px 0;
 }
 
-nav ul li a:hover {
-    color: #4db8ff;
+.euno-main-nav a:hover, 
+.euno-main-nav .current-menu-item > a,
+.euno-main-nav .current-menu-ancestor > a {
+    color: var(--euno-primary);
+}
+
+.euno-main-nav ul ul.sub-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--euno-white);
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    border-radius: 5px;
+    padding: 10px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    border: 1px solid var(--euno-border);
+    z-index: 1001;
+}
+
+.euno-main-nav li:hover > ul.sub-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.euno-main-nav ul ul.sub-menu li {
+    width: 100%;
+}
+
+.euno-main-nav ul ul.sub-menu a {
+    padding: 10px 20px;
+    color: var(--euno-text-main);
+    text-transform: none;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+
+.euno-main-nav ul ul.sub-menu a:hover {
+    background-color: var(--euno-bg);
+    color: var(--euno-primary);
+}
+
+.euno-main-nav ul ul.sub-menu ul.sub-menu {
+    top: 0;
+    left: 100%;
+    margin-left: 5px;
+}
+
+@keyframes eunoFadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.euno-main-content {
+    flex: 1;
+    opacity: 0;
+    animation: eunoFadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: 0.1s;
+}
+
+.euno-main-box {
+    margin: 40px auto;
+}
+
+.euno-main-box-inner {
+    padding: 0;
+}
+
+.container {
+    max-width: 1250px;
+    margin: 0 auto;
+    padding: 0 20px;
+    width: 100%;
 }
 
 main {
-    padding: 20px;
-    background-color: #fff;
-    margin-top: 20px;
-    border-radius: 5px;
+    flex: 1;
 }
 
 article {
     margin-bottom: 30px;
     padding-bottom: 20px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--euno-border);
 }
 
 article h2 {
-    color: #2c3e50;
+    color: var(--euno-text-main);
     margin-top: 0;
 }
 
 article .entry-meta {
-    color: #666;
+    color: var(--euno-text-muted);
     font-size: 0.9em;
     margin-bottom: 10px;
-}
-
-footer {
-    background-color: #2c3e50;
-    color: #fff;
-    text-align: center;
-    padding: 20px 0;
-    margin-top: 20px;
-}
-
-a {
-    color: #4db8ff;
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
 }
 
 .btn {
     display: inline-block;
     padding: 10px 20px;
-    background-color: #4db8ff;
-    color: #fff;
+    background-color: var(--euno-primary);
+    color: var(--euno-white);
     text-decoration: none;
     border-radius: 5px;
     margin: 10px 0;
+    transition: background-color 0.3s ease;
 }
 
 .btn:hover {
-    background-color: #3a8fd6;
+    background-color: var(--euno-primary-hover);
 }
 
 .post-thumbnail {
@@ -124,20 +266,139 @@ a:hover {
     margin-bottom: 20px;
 }
 
+.euno-footer {
+    background-color: var(--euno-white);
+    border-top: 1px solid var(--euno-border);
+    padding: 60px 20px 20px;
+    margin-top: auto;
+}
+
+.euno-footer-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 40px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--euno-border);
+    margin-bottom: 20px;
+}
+
+.euno-footer-logo {
+    max-height: 40px;
+    margin-bottom: 20px;
+}
+
+.euno-footer-description {
+    font-size: 14px;
+    color: var(--euno-text-muted);
+    line-height: 1.6;
+    margin: 0 0 20px;
+    max-width: 400px;
+}
+
+.euno-footer-socials {
+    display: flex;
+    gap: 15px;
+}
+
+.euno-footer-socials a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: var(--euno-bg);
+    color: var(--euno-text-main);
+    border-radius: 5px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.euno-footer-socials a:hover {
+    background-color: var(--euno-primary);
+    color: var(--euno-white);
+}
+
+.euno-footer-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--euno-text-main);
+    margin: 0 0 20px;
+}
+
+.euno-footer-nav ul,
+.euno-footer-contact-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.euno-footer-nav a,
+.euno-footer-contact-list li {
+    color: var(--euno-text-muted);
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.euno-footer-nav a:hover {
+    color: var(--euno-primary);
+}
+
+.euno-footer-contact-list svg {
+    color: var(--euno-primary);
+}
+
+.euno-footer-bottom {
+    text-align: center;
+}
+
+.euno-footer-bottom p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--euno-text-muted);
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .euno-footer-main {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .euno-main-nav {
+        display: none;
+    }
+}
+
+a {
+    color: var(--euno-primary);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
 .comment-list {
     list-style: none;
     padding: 0;
 }
 
 .comment-list li {
-    background-color: #f9f9f9;
+    background-color: var(--euno-bg);
     padding: 15px;
     margin-bottom: 10px;
     border-radius: 5px;
 }
 
 .widget {
-    background-color: #f9f9f9;
+    background-color: var(--euno-bg);
     padding: 15px;
     margin-bottom: 20px;
     border-radius: 5px;
@@ -145,5 +406,5 @@ a:hover {
 
 .widget h3 {
     margin-top: 0;
-    color: #2c3e50;
+    color: var(--euno-text-main);
 }
