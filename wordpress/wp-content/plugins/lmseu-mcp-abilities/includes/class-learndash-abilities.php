@@ -28,7 +28,11 @@ class LMSEU_LearnDash_Abilities {
             ),
             'execute_callback'    => array( 'LMSEU_LearnDash_Abilities', 'get_courses' ),
             'permission_callback' => '__return_true',
-            'meta'                => array( 'show_in_rest' => true, 'mcp' => array( 'public' => true, 'type' => 'tool' ), 'annotations' => array( 'readonly' => false ) ),
+            'meta'                => array( 
+                'show_in_rest' => true, 
+                'mcp'          => array( 'public' => true ),
+                'annotations'  => array( 'readonly' => false ) 
+            ),
         ) );
 
         // —— Reporte de datos de curso por usuario ——
@@ -45,7 +49,11 @@ class LMSEU_LearnDash_Abilities {
             ),
             'execute_callback'    => array( 'LMSEU_LearnDash_Abilities', 'get_user_course_report' ),
             'permission_callback' => '__return_true',
-            'meta'                => array( 'show_in_rest' => true, 'mcp' => array( 'public' => true, 'type' => 'tool' ), 'annotations' => array( 'readonly' => false ) ),
+            'meta'                => array( 
+                'show_in_rest' => true, 
+                'mcp'          => array( 'public' => true ),
+                'annotations'  => array( 'readonly' => false ) 
+            ),
         ) );
 
         // —— Crear lecciones ——
@@ -64,97 +72,198 @@ class LMSEU_LearnDash_Abilities {
             ),
             'execute_callback'    => array( 'LMSEU_LearnDash_Abilities', 'create_lesson' ),
             'permission_callback' => '__return_true',
-            'meta'                => array( 'show_in_rest' => true, 'mcp' => array( 'public' => true, 'type' => 'tool' ), 'annotations' => array( 'readonly' => false ) ),
+            'meta'                => array( 'show_in_rest' => true, 'mcp' => array( 'public' => true ), 'annotations' => array( 'readonly' => false ) ),
         ) );
-
-        // —— Crear cursos ——
-        wp_register_ability( 'learndash/create-course', array(
-            'label'               => __( 'Crear Curso de LearnDash', 'lmseu-mcp-abilities' ),
+        // —— Resetear progreso de usuario ——
+        wp_register_ability( 'learndash/reset-user-progress', array(
+            'label'               => __( 'Resetear Progreso de Usuario', 'lmseu-mcp-abilities' ),
             'category'            => 'learndash',
-            'description'         => __( 'Crea un nuevo curso en LearnDash.', 'lmseu-mcp-abilities' ),
+            'description'         => __( 'Elimina el estado de curso completado y/o el progreso de una lección específica para un usuario.', 'lmseu-mcp-abilities' ),
             'input_schema'        => array(
                 'type'                 => 'object',
                 'properties'           => array(
-                    'title'     => array( 'type' => 'string', 'description' => 'Título del curso' ),
-                    'content'   => array( 'type' => 'string', 'description' => 'Contenido del curso' ),
+                    'user_id'   => array( 'type' => 'integer', 'description' => 'ID del usuario' ),
+                    'course_id' => array( 'type' => 'integer', 'description' => 'ID del curso a resetear' ),
+                    'lesson_id' => array( 'type' => 'integer', 'description' => 'ID de la lección a des-completar (opcional)' ),
                 ),
-                'required' => array( 'title' )
+                'required' => array( 'user_id', 'course_id' )
             ),
-            'execute_callback'    => array( 'LMSEU_LearnDash_Abilities', 'create_course' ),
+            'execute_callback'    => array( 'LMSEU_LearnDash_Abilities', 'reset_user_progress' ),
             'permission_callback' => '__return_true',
-            'meta'                => array( 'show_in_rest' => true, 'mcp' => array( 'public' => true, 'type' => 'tool' ), 'annotations' => array( 'readonly' => false ) ),
+            'meta'                => array( 'show_in_rest' => true, 'mcp' => array( 'public' => true ), 'annotations' => array( 'readonly' => false ) ),
         ) );
-        // —— Inscribir usuario en curso ——
-        wp_register_ability( 'learndash/enroll-user-in-course', array(
-            'label'               => __( 'Inscribir Usuario en Curso', 'lmseu-mcp-abilities' ),
+
+        // —— Matricular usuario en curso ——
+        wp_register_ability( 'learndash/enroll-user', array(
+            'label'               => __( 'Matricular Usuario en Curso', 'lmseu-mcp-abilities' ),
             'category'            => 'learndash',
-            'description'         => __( 'Inscribe a un usuario en un curso de LearnDash utilizando su ID, email o nombre de usuario.', 'lmseu-mcp-abilities' ),
+            'description'         => __( 'Inscribe a un usuario en un curso específico.', 'lmseu-mcp-abilities' ),
             'input_schema'        => array(
                 'type'                 => 'object',
                 'properties'           => array(
-                    'course_id'  => array( 'type' => 'integer', 'description' => 'ID del curso.' ),
-                    'user_id'    => array( 'type' => 'integer', 'description' => 'ID del usuario.' ),
-                    'email'      => array( 'type' => 'string', 'description' => 'Email del usuario.' ),
-                    'user_login' => array( 'type' => 'string', 'description' => 'Nombre de usuario (login).' ),
+                    'user_id'   => array( 'type' => 'integer', 'description' => 'ID del usuario' ),
+                    'course_id' => array( 'type' => 'integer', 'description' => 'ID del curso' ),
                 ),
-                'required' => array( 'course_id' )
+                'required' => array( 'user_id', 'course_id' )
             ),
-            'execute_callback'    => array( 'LMSEU_LearnDash_Abilities', 'enroll_user_in_course' ),
+            'execute_callback'    => array( 'LMSEU_LearnDash_Abilities', 'enroll_user' ),
             'permission_callback' => '__return_true',
-            'meta'                => array( 'show_in_rest' => true, 'mcp' => array( 'public' => true, 'type' => 'tool' ), 'annotations' => array( 'readonly' => false ) ),
+            'meta'                => array( 'show_in_rest' => true, 'mcp' => array( 'public' => true ), 'annotations' => array( 'readonly' => false ) ),
+        ) );
+
+        // —— Registrar Tiempo de Estudio ——
+        wp_register_ability( 'learndash/track-time', array(
+            'label'               => __( 'Registrar Tiempo de Estudio', 'lmseu-mcp-abilities' ),
+            'category'            => 'learndash',
+            'description'         => __( 'Registra el tiempo efectivo de estudio de un usuario en un paso del curso.', 'lmseu-mcp-abilities' ),
+            'input_schema'        => array(
+                'type'                 => 'object',
+                'properties'           => array(
+                    'user_id'   => array( 'type' => 'integer' ),
+                    'course_id' => array( 'type' => 'integer' ),
+                    'step_id'   => array( 'type' => 'integer' ),
+                    'seconds'   => array( 'type' => 'integer', 'description' => 'Segundos a incrementar' ),
+                ),
+                'required' => array( 'user_id', 'course_id', 'step_id', 'seconds' )
+            ),
+            'execute_callback'    => array( 'LMSEU_LearnDash_Abilities', 'track_time' ),
+            'permission_callback' => '__return_true',
+            'meta'                => array( 'show_in_rest' => true, 'mcp' => array( 'public' => true ), 'annotations' => array( 'readonly' => false ) ),
+        ) );
+
+        // —— Obtener Tiempo Acumulado del Curso ——
+        wp_register_ability( 'learndash/get-user-course-time', array(
+            'label'               => __( 'Obtener Tiempo de Curso', 'lmseu-mcp-abilities' ),
+            'category'            => 'learndash',
+            'description'         => __( 'Obtiene el tiempo total efectivo de estudio de un usuario en un curso.', 'lmseu-mcp-abilities' ),
+            'input_schema'        => array(
+                'type'                 => 'object',
+                'properties'           => array(
+                    'user_id'   => array( 'type' => 'integer' ),
+                    'course_id' => array( 'type' => 'integer' ),
+                ),
+                'required' => array( 'user_id', 'course_id' )
+            ),
+            'execute_callback'    => array( 'LMSEU_LearnDash_Abilities', 'get_user_course_time' ),
+            'permission_callback' => '__return_true',
+            'meta'                => array( 'show_in_rest' => true, 'mcp' => array( 'public' => true ), 'annotations' => array( 'readonly' => false ) ),
         ) );
     }
 
-    public static function enroll_user_in_course( $input ) {
-        if ( empty( $input['course_id'] ) ) {
-            return new WP_Error( 'missing_course_id', 'El parámetro course_id es obligatorio.' );
-        }
+    /**
+     * Obtiene los segundos totales de la tabla personalizada.
+     */
+    public static function get_user_course_time( $input ) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'euno_time_tracking';
+        
+        $user_id   = (int)$input['user_id'];
+        $course_id = (int)$input['course_id'];
 
-        $user = null;
-        if ( ! empty( $input['user_id'] ) ) {
-            $user = get_user_by( 'ID', $input['user_id'] );
-        } elseif ( ! empty( $input['email'] ) ) {
-            $user = get_user_by( 'email', $input['email'] );
-        } elseif ( ! empty( $input['user_login'] ) ) {
-            $user = get_user_by( 'login', $input['user_login'] );
-        }
+        $total_seconds = (int) $wpdb->get_var( $wpdb->prepare(
+            "SELECT SUM(seconds) FROM $table_name WHERE user_id = %d AND course_id = %d",
+            $user_id, $course_id
+        ) );
 
-        if ( ! $user ) {
-            return new WP_Error( 'user_not_found', 'No se encontró ningún usuario con el identificador proporcionado (user_id, email, o user_login).' );
-        }
-
-        ld_update_course_access( $user->ID, $input['course_id'] );
+        $log_file = LMSEU_MCP_ABILITIES_PATH . 'logs/tracking.log';
+        $timestamp = date('Y-m-d H:i:s');
+        // file_put_contents($log_file, "[$timestamp] GET_TIME: User $user_id, Course $course_id, Total $total_seconds\n", FILE_APPEND);
 
         return array(
-            'user_id'   => $user->ID,
-            'user_login' => $user->user_login,
-            'course_id' => $input['course_id'],
-            'message'   => 'Usuario inscrito exitosamente en el curso.'
+            'seconds' => $total_seconds,
+            'hms'     => gmdate("H:i:s", $total_seconds)
         );
     }
 
-    public static function create_course( $input ) {
-        if ( empty( $input['title'] ) ) {
-            return new WP_Error( 'missing_params', 'Falta el parámetro: title es obligatorio.' );
+    /**
+     * Incrementa el tiempo de estudio en la tabla personalizada.
+     */
+    public static function track_time( $input ) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'euno_time_tracking';
+
+        $user_id   = (int)$input['user_id'];
+        $course_id = (int)$input['course_id'];
+        $step_id   = (int)$input['step_id'];
+        $seconds   = (int)$input['seconds'];
+
+        // Seguridad: Un usuario solo puede registrar su propio tiempo
+        if ( $user_id !== get_current_user_id() && ! current_user_can( 'administrator' ) && ! current_user_can( 'group_leader' ) ) {
+            return array( 'success' => false, 'message' => 'No tienes permiso para actualizar el tiempo de otro usuario.' );
         }
 
-        $course_id = wp_insert_post( array(
-            'post_type'    => 'sfwd-courses',
-            'post_title'   => sanitize_text_field( $input['title'] ),
-            'post_content' => isset( $input['content'] ) ? wp_kses_post( $input['content'] ) : '',
-            'post_status'  => 'publish',
-            'post_author'  => 1
-        ) );
+        if ( $seconds <= 0 ) return array( 'success' => true );
 
-        if ( is_wp_error( $course_id ) ) {
-            return $course_id;
-        }
+        $query = $wpdb->prepare(
+            "INSERT INTO $table_name (user_id, course_id, step_id, seconds, last_updated) 
+             VALUES (%d, %d, %d, %d, CURRENT_TIMESTAMP)
+             ON DUPLICATE KEY UPDATE seconds = seconds + %d, last_updated = CURRENT_TIMESTAMP",
+            $user_id, $course_id, $step_id, $seconds, $seconds
+        );
+
+        $result = $wpdb->query( $query );
 
         return array(
-            'course_id' => $course_id,
-            'title'     => $input['title'],
-            'message'   => 'Curso creado exitosamente'
+            'success' => ( $result !== false ),
+            'message' => ( $result !== false ) ? 'Tiempo actualizado.' : 'Error DB: ' . $wpdb->last_error
         );
+    }
+
+    public static function enroll_user( $input ) {
+        if ( empty( $input['user_id'] ) || empty( $input['course_id'] ) ) {
+            return new WP_Error( 'missing_params', 'Faltan parámetros: user_id y course_id son obligatorios.' );
+        }
+
+        $user_id = (int) $input['user_id'];
+        $course_id = (int) $input['course_id'];
+
+        if ( function_exists( 'ld_update_course_access' ) ) {
+            ld_update_course_access( $user_id, $course_id );
+            // También forzamos la fecha de acceso para nuestra lógica de 'actually_enrolled'
+            update_user_meta( $user_id, 'course_' . $course_id . '_access_from', time() );
+            
+            return array( 'success' => true, 'message' => "Usuario {$user_id} matriculado con éxito en el curso {$course_id}." );
+        }
+
+        return new WP_Error( 'function_missing', 'La función ld_update_course_access no está disponible.' );
+    }
+
+    public static function reset_user_progress( $input ) {
+        if ( empty( $input['user_id'] ) || empty( $input['course_id'] ) ) {
+            return new WP_Error( 'missing_params', 'Faltan parámetros: user_id y course_id son obligatorios.' );
+        }
+
+        $user_id = (int) $input['user_id'];
+        $course_id = (int) $input['course_id'];
+        $lesson_id = ! empty( $input['lesson_id'] ) ? (int) $input['lesson_id'] : 0;
+
+        // Eliminar meta de curso completado
+        delete_user_meta( $user_id, 'course_completed_' . $course_id );
+        
+        // Función nativa para limpiar caché y estados si existe
+        if ( function_exists( 'learndash_user_course_complete_remove' ) ) {
+            learndash_user_course_complete_remove( $user_id, $course_id );
+        }
+
+        $msg = "Se eliminó el estado de curso completado para el usuario {$user_id}. ";
+
+        // Si se pasa una lección, eliminarla del arreglo de progreso
+        if ( $lesson_id ) {
+            $progress = get_user_meta( $user_id, '_sfwd-course_progress', true );
+            if ( is_array( $progress ) && isset( $progress[ $course_id ]['lessons'][ $lesson_id ] ) ) {
+                unset( $progress[ $course_id ]['lessons'][ $lesson_id ] );
+                update_user_meta( $user_id, '_sfwd-course_progress', $progress );
+                
+                // Intentar borrar meta individual de la lección completada si existe
+                delete_user_meta( $user_id, 'lesson_completed_' . $lesson_id );
+                
+                $msg .= "Se eliminó el progreso de la lección {$lesson_id}.";
+            } else {
+                $msg .= "La lección {$lesson_id} no figuraba como completada.";
+            }
+        }
+
+        return array( 'success' => true, 'message' => $msg );
     }
 
     public static function create_lesson( $input ) {
@@ -211,6 +320,10 @@ class LMSEU_LearnDash_Abilities {
     }
 
     public static function get_user_course_report( $input ) {
+        if ( ! current_user_can( 'administrator' ) && ! current_user_can( 'group_leader' ) ) {
+            return new WP_Error( 'rest_forbidden', 'No tienes permisos para acceder a este reporte.', array( 'status' => 403 ) );
+        }
+
         global $wpdb;
         $limit = isset( $input['limit'] ) ? intval( $input['limit'] ) : 5000;
         $offset = isset( $input['offset'] ) ? intval( $input['offset'] ) : 0;
@@ -267,6 +380,14 @@ class LMSEU_LearnDash_Abilities {
                 $total_time_seconds = (int) get_user_meta($user->ID, 'course_total_time_on_' . $course_id, true);
                 $total_time_hms = gmdate("H:i:s", $total_time_seconds);
 
+                // Tiempo Efectivo (EUNO Custom Tracking)
+                $table_tracking = $wpdb->prefix . 'euno_time_tracking';
+                $effective_seconds = (int) $wpdb->get_var( $wpdb->prepare(
+                    "SELECT SUM(seconds) FROM $table_tracking WHERE user_id = %d AND course_id = %d",
+                    $user->ID, $course_id
+                ) );
+                $effective_time_hms = gmdate("H:i:s", $effective_seconds);
+
                 // Tiempo hasta completar
                 $completion_time = '';
                 if ($started_ts && $completed_ts) {
@@ -290,15 +411,12 @@ class LMSEU_LearnDash_Abilities {
                     'curso_completado'       => $curso_completado,
                     'curso_completado_el'    => $completado_el,
                     'total_time'             => $total_time_hms,
+                    'tiempo_efectivo'        => $effective_time_hms,
                     'completion_time'        => $completion_time,
                     'Username'               => $user->user_login,
                     'First Name'             => $first_name,
                     'Last Name'              => $last_name,
                     'Group(s)'               => $grupos_str,
-                    'cargo'                  => $cargo,
-                    'ciudad'                 => $ciudad,
-                    'punto_de_venta'         => $pdv,
-                    'celular'                => $celular,
                     'course_started_on'      => $started_on,
                     'course_total_time_on'   => $total_time_hms,
                     'course_last_step_id'    => $last_step_id,
@@ -315,7 +433,4 @@ class LMSEU_LearnDash_Abilities {
         return $report;
     }
 }
-
-add_action( 'wp_abilities_api_init', function() {
-    LMSEU_LearnDash_Abilities::register();
-}, 20 );
+LMSEU_LearnDash_Abilities::register();

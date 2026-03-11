@@ -27,12 +27,141 @@ class LMSEU_Global_Filters {
         // Hooks de Focus Mode
         add_action( 'learndash-focus-sidebar-heading-after', array( __CLASS__, 'inject_sidebar_progress' ), 10, 2 );
         
-        // Integración de Header y Footer sin romper etiquetas HTML
+        // IntegraciÃ³n de Header y Footer sin romper etiquetas HTML
         add_action( 'learndash-focus-template-start', array( __CLASS__, 'show_site_header' ), 1 );
         add_action( 'learndash-focus-template-end', array( __CLASS__, 'show_site_footer' ), 99 );
-    }
 
-    public static function show_site_header() {
+        // Tracking de tiempo efectivo
+        add_action( 'wp_footer', array( __CLASS__, 'inject_time_tracker_script' ) );
+        }
+
+        public static function inject_time_tracker_script() {
+        if ( ! is_user_logged_in() ) return;
+
+        $post_type = get_post_type();
+        $is_learndash = in_array( $post_type, array( 'sfwd-courses', 'sfwd-lessons', 'sfwd-topic', 'sfwd-quiz' ) );
+
+        if ( ! $is_learndash ) return;
+
+        $user_id   = get_current_user_id();
+        $course_id = learndash_get_course_id();
+        $step_id   = get_the_ID();
+
+        if ( ! $course_id ) return;
+
+        ?>
+        <script>
+        (function() {
+            if (window.EUNO_TRACKER) {
+                window.EUNO_TRACKER.updateStep(<?php echo $step_id; ?>);
+                return;
+            }
+
+            window.EUNO_TRACKER = {
+                user_id: <?php echo $user_id; ?>,
+                course_id: <?php echo $course_id; ?>,
+                step_id: <?php echo $step_id; ?>,
+                nonce: '<?php echo wp_create_nonce( "wp_rest" ); ?>',
+                lastInteraction: Date.now(),
+                isTabActive: true,
+                storageKey: `euno_tracker_pending_${<?php echo $user_id; ?>}_${<?php echo $course_id; ?>}`,
+                
+                init: function() {
+                    console.log('[EUNO Tracker] Global Init - Step:', this.step_id);
+                    
+                    document.addEventListener('visibilitychange', () => {
+                        this.isTabActive = !document.hidden;
+                        if (!this.isTabActive) this.sendPings();
+                    });
+
+                    const resetIdle = () => { this.lastInteraction = Date.now(); };
+                    ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'].forEach(ev => {
+                        window.addEventListener(ev, resetIdle, { passive: true });
+                    });
+
+                    // Recuperar tiempo pendiente del almacenamiento local
+                    const pending = localStorage.getItem(this.storageKey);
+                    if (pending) {
+                        console.log('[EUNO Tracker] Recuperando tiempo pendiente:', pending);
+                        this.sendPings(parseInt(pending));
+                    }
+
+                    setInterval(() => {
+                        if (this.isTabActive && (Date.now() - this.lastInteraction < 60000)) {
+                            // Incrementar tiempo activo tanto en memoria como en storage
+                            let current = parseInt(localStorage.getItem(this.storageKey) || 0);
+                            localStorage.setItem(this.storageKey, current + 1);
+                        }
+                    }, 1000);
+
+                    setInterval(() => this.sendPings(), 30000);
+                    window.addEventListener('beforeunload', () => this.sendPings());
+                },
+
+                updateStep: function(newStepId) {
+                    if (this.step_id === newStepId) return;
+                    this.sendPings();
+                    this.step_id = newStepId;
+                    console.log('[EUNO Tracker] Step Updated:', newStepId);
+                },
+
+                getFullCourseTime: function(serverBase = 0) {
+                    // Retorna la base del servidor + lo que hayamos acumulado localmente en esta sesión
+                    const localSeconds = parseInt(localStorage.getItem(this.storageKey) || 0);
+                    return serverBase + localSeconds;
+                },
+
+                sendPings: async function(forcedSeconds = null) {
+                    const pending = forcedSeconds !== null ? forcedSeconds : parseInt(localStorage.getItem(this.storageKey) || 0);
+                    if (pending <= 0) return;
+
+                    console.log(`[EUNO Tracker] Sincronizando ${pending}s para paso ${this.step_id}`);
+                    
+                    try {
+                        const response = await fetch('/wp-json/wp-abilities/v1/abilities/learndash/track-time/run', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': this.nonce },
+                            body: JSON.stringify({
+                                input: {
+                                    user_id: this.user_id,
+                                    course_id: this.course_id,
+                                    step_id: this.step_id,
+                                    seconds: pending
+                                }
+                            })
+                        });
+                        
+                        const text = await response.text();
+                        let resData;
+                        try { resData = JSON.parse(text); } catch(e) { 
+                            console.error('[EUNO Tracker] Servidor no devolvió JSON:', text);
+                            throw new Error('Invalid server response');
+                        }
+
+                        if (response.ok && (resData.success || resData.value)) {
+                            const current = parseInt(localStorage.getItem(this.storageKey) || 0);
+                            localStorage.setItem(this.storageKey, Math.max(0, current - pending));
+                            console.log('[EUNO Tracker] Sync OK');
+                        } else {
+                            throw new Error(resData.message || 'Server error');
+                        }
+                    } catch (e) {
+                        console.warn('[EUNO Tracker] Sync diferido:', e.message);
+                    }
+                },
+                
+                getActiveTime: function() {
+                    return parseInt(localStorage.getItem(this.storageKey) || 0);
+                }
+            };
+            window.EUNO_TRACKER.init();
+        })();
+        </script>
+<?php
+        }
+
+        public static function show_site_header() {
+
         if ( function_exists( 'elementor_theme_do_location' ) ) {
             echo '<div class="euno-injected-header">';
             elementor_theme_do_location( 'header' );
@@ -54,7 +183,7 @@ class LMSEU_Global_Filters {
         if ( $progress ) {
             $percentage = (int)$progress['percentage'];
             echo '<div class="euno-sidebar-progress">';
-            echo '  <div class="euno-progress-text"><span>Avance</span><strong>' . $percentage . '%</strong></div>';
+            echo '  <div class="euno-progress-text"><span>Tu avance</span><strong>' . $percentage . '%</strong></div>';
             echo '  <div class="euno-progress-track"><div style="width:' . $percentage . '%"></div></div>';
             echo '</div>';
         }
@@ -99,9 +228,21 @@ class LMSEU_Global_Filters {
 
     public static function add_admin_menu_to_nav( $items, $args ) {
         if ( ! is_user_logged_in() ) return $items;
+
+        // Asegurarnos de que esto se agregue solo al menú principal para no romper footers
+        if ( isset($args->theme_location) && $args->theme_location !== 'primary' ) {
+            return $items;
+        }
+
         $user = wp_get_current_user();
         if ( array_intersect( array( 'administrator', 'group_leader' ), (array) $user->roles ) ) {
-            $items .= '<li class="menu-item admin-nav-item"><a href="' . home_url( '/informes/' ) . '">ADMINISTRACIÓN</a></li>';
+            $items .= '<li class="menu-item menu-item-has-children admin-nav-item">
+                <a href="#">Administración</a>
+                <ul class="sub-menu">
+                    <li><a href="' . home_url( '/informes/' ) . '">Informes</a></li>
+                    <li><a href="' . admin_url() . '">WP Admin</a></li>
+                </ul>
+            </li>';
         }
         return $items;
     }
@@ -110,89 +251,96 @@ class LMSEU_Global_Filters {
         $is_editor = false;
         if ( isset( $_GET['elementor-preview'] ) || ( class_exists( '\Elementor\Plugin' ) && \Elementor\Plugin::$instance->editor->is_edit_mode() ) ) $is_editor = true;
         ?>
-        <style id="euno-app-redesign">
-            /* --- ESTRUCTURA APP --- */
-            html, body { 
-                margin: 0 !important; padding: 0 !important; 
-                background-color: #f1f5f9 !important; 
-                font-family: 'Plus Jakarta Sans', sans-serif !important;
-            }
-            
-            .ld-focus {
+        <style id="euno-focus-redesign">
+            /* --- RESET BASE (SOLO PARA LECCIONES) --- */
+            .ld-focus { font-family: 'Plus Jakarta Sans', sans-serif !important; background-color: #f1f5f9 !important; }
+
+            <?php if ( ! $is_editor ) : ?>
+            /* --- LAYOUT ESTRUCTURAL --- */
+            .learndash-wrapper .ld-focus {
                 display: flex !important;
                 flex-direction: row !important;
                 flex-wrap: wrap !important;
                 width: 100% !important;
-                background: transparent !important;
+                height: auto !important;
+                min-height: 100vh !important;
+                position: relative !important;
+                overflow: visible !important;
+                background: #f8fafc !important;
             }
 
-            .euno-injected-header { flex: 0 0 100% !important; width: 100% !important; order: 1 !important; z-index: 1000 !important; }
-            .euno-injected-footer { flex: 0 0 100% !important; width: 100% !important; order: 4 !important; }
+            /* Header y Footer: Ocupan el 100% ancho */
+            .euno-injected-header { flex: 0 0 100% !important; width: 100% !important; order: 1 !important; z-index: 10002 !important; background: #ffffff !important; border-bottom: 1px solid rgba(0,0,0,0.05); }
+            .euno-injected-footer { flex: 0 0 100% !important; width: 100% !important; order: 4 !important; background: #ffffff !important; }
 
+            /* Sidebar: Columna Izquierda */
             .ld-focus .ld-focus-sidebar {
                 flex: 0 0 360px !important;
                 width: 360px !important;
-                background: #0f172a !important;
+                background-color: #0f172a !important; 
                 order: 2 !important;
                 position: relative !important;
                 height: auto !important;
-                min-height: calc(100vh - 100px) !important;
+                min-height: 600px !important;
+                z-index: 10 !important;
                 border: none !important;
             }
 
-            .ld-focus .ld-focus-main {
+            /* Main Content: La zona de estudio */
+            .ld-focus .ld-focus-main { 
                 flex: 1 1 0 !important;
-                background: #f8fafc !important;
                 order: 3 !important;
-                padding: 50px !important;
+                padding: 60px 40px !important;
                 display: flex !important;
                 flex-direction: column !important;
                 align-items: center !important;
+                background-color: transparent !important;
+                overflow: visible !important;
             }
 
-            <?php if ( ! $is_editor ) : ?>
-            /* --- SIDEBAR DESIGN (CUSTOM) --- */
+            /* --- COMPONENTES SIDEBAR --- */
             .ld-focus .ld-course-navigation-heading { padding: 40px 30px 20px !important; border-bottom: 1px solid #1e293b !important; }
-            .ld-focus #ld-focus-mode-course-heading { color: #ffffff !important; font-size: 18px !important; font-weight: 800 !important; }
-            
+            .ld-focus #ld-focus-mode-course-heading { font-size: 18px !important; font-weight: 800 !important; color: #ffffff !important; text-transform: uppercase !important; }
+
             .euno-sidebar-progress { padding: 25px 30px !important; border-bottom: 1px solid #1e293b; }
             .euno-progress-text { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
             .euno-progress-text span { color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; }
             .euno-progress-text strong { color: #3b82f6; font-size: 16px; font-weight: 800; }
             .euno-sidebar-progress .euno-progress-track { background: #1e293b; height: 6px; border-radius: 3px; }
-            .euno-sidebar-progress .euno-progress-track div { background: #3b82f6; height: 100%; border-radius: 3px; }
+            .euno-sidebar-progress .euno-progress-track div { background: #3b82f6; height: 100%; border-radius: 3px; box-shadow: 0 0 10px rgba(59, 130, 246, 0.4); }
 
-            .ld-focus .ld-lesson-item-section-heading { background: #1e293b !important; padding: 15px 30px !important; color: #94a3b8 !important; font-size: 11px !important; font-weight: 800 !important; }
-            
-            .ld-focus .ld-lesson-item-preview-heading { padding: 20px 30px !important; transition: all 0.2s; text-decoration: none !important; }
+            /* Curriculum List */
+            .ld-focus .ld-lesson-item-section-heading { background-color: #1e293b !important; padding: 15px 30px !important; color: #ffffff !important; font-size: 12px !important; font-weight: 800 !important; border-bottom: 1px solid #0f172a; }
+            .ld-focus .ld-lesson-item-preview-heading { padding: 18px 30px !important; transition: all 0.2s; border-left: 4px solid transparent !important; text-decoration: none !important; }
             .ld-focus .ld-lesson-item-preview-heading:hover { background: rgba(255,255,255,0.03) !important; }
-            .ld-focus .ld-is-current-lesson .ld-lesson-item-preview-heading { background: #1e293b !important; border-left: 4px solid #3b82f6 !important; }
+            .ld-focus .ld-is-current-lesson .ld-lesson-item-preview-heading { background: #1e293b !important; border-left-color: #3b82f6 !important; }
             
             .ld-focus .ld-lesson-title { color: #cbd5e1 !important; font-size: 14px !important; font-weight: 600 !important; display: flex; align-items: center; gap: 12px; }
             .ld-focus .ld-lesson-title::before { content: '\f144'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: #475569; }
             .ld-focus .ld-is-current-lesson .ld-lesson-title { color: #ffffff !important; }
             .ld-focus .ld-is-current-lesson .ld-lesson-title::before { color: #3b82f6 !important; }
 
-            /* --- CONTENT CARD DESIGN --- */
+            /* --- ÁREA DE ESTUDIO (TARJETA MODERNA) --- */
             .ld-focus .ld-focus-content {
                 width: 100% !important;
                 max-width: 1000px !important;
                 background: #ffffff !important;
                 padding: 60px 80px !important;
                 border-radius: 24px;
-                box-shadow: 0 30px 60px rgba(0,0,0,0.04);
+                box-shadow: 0 30px 60px rgba(15,23,42,0.04);
                 border: 1px solid #f1f5f9;
+                margin-bottom: 40px;
             }
-            .ld-focus .ld-focus-content h1 { font-size: 40px !important; font-weight: 800 !important; color: #0f172a !important; letter-spacing: -2px; margin-bottom: 40px !important; }
+            .ld-focus .ld-focus-content h1 { font-size: 40px !important; font-weight: 900 !important; color: #0f172a !important; letter-spacing: -2px; margin-bottom: 40px !important; line-height: 1.1 !important; }
 
-            /* Botones de acción */
-            .ld-focus .ld-content-actions { width: 100%; max-width: 1000px; padding: 40px 0 !important; display: flex !important; justify-content: space-between !important; }
+            /* Botones de Navegación */
+            .ld-focus .ld-content-actions { width: 100%; max-width: 1000px; padding: 40px 0 !important; display: flex !important; justify-content: space-between !important; align-items: center !important; }
             .ld-focus .ld-content-actions .ld-button, .ld-focus .ld-content-actions .ld-content-action-prev, .ld-focus .ld-content-actions .ld-content-action-next {
-                background: #ffffff !important; color: #475569 !important; font-weight: 700 !important; font-size: 14px !important; padding: 12px 24px !important; border-radius: 10px !important; border: 1px solid #e2e8f0 !important; text-decoration: none !important;
+                background: #ffffff !important; color: #475569 !important; font-weight: 700 !important; font-size: 14px !important; padding: 14px 28px !important; border-radius: 12px !important; border: 1px solid #e2e8f0 !important; text-decoration: none !important; transition: all 0.2s;
             }
-            .ld-focus .ld-course-check-btn { background: #3b82f6 !important; color: #ffffff !important; border: none !important; font-weight: 800 !important; padding: 16px 36px !important; border-radius: 12px !important; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2) !important; }
+            .ld-focus .ld-content-actions .ld-course-check-btn { background: #3b82f6 !important; color: #ffffff !important; border: none !important; font-weight: 800 !important; padding: 18px 40px !important; border-radius: 14px !important; box-shadow: 0 15px 30px rgba(59,130,246,0.3) !important; }
 
-            /* Ocultar basura LD */
+            /* Limpieza Total */
             .ld-focus-header, .ld-masthead, .ld-focus-sidebar-trigger, .ld-breadcrumbs, .ld-status-bubble { display: none !important; }
             <?php endif; ?>
         </style>
@@ -207,5 +355,4 @@ class LMSEU_Global_Filters {
         return $html;
     }
 }
-
 LMSEU_Global_Filters::init();

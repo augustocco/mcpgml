@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LMSEU MCP Abilities
  * Description: Registro de habilidades personalizadas para el MCP Adapter de WordPress.
- * Version: 2.9.1
+ * Version: 2.8.0
  * Author: Augusto César Cañola Ortiz
  */
 
@@ -12,12 +12,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 define( 'LMSEU_MCP_ABILITIES_PATH', plugin_dir_path( __FILE__ ) );
 
+// ── Hook de Activación (Base de Datos) ──
 register_activation_hook( __FILE__, 'lmseu_mcp_abilities_activate' );
 function lmseu_mcp_abilities_activate() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'euno_time_tracking';
     $charset_collate = $wpdb->get_charset_collate();
 
+    // Estructura de tabla para tracking de tiempo
     $sql = "CREATE TABLE $table_name (
         id bigint(20) NOT NULL AUTO_INCREMENT,
         user_id bigint(20) NOT NULL,
@@ -33,29 +35,21 @@ function lmseu_mcp_abilities_activate() {
     dbDelta( $sql );
 }
 
+// Cargar Componentes
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-student-profile.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-enrolled-courses.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-reports-dashboard.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-global-filters.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-custom-lesson-template.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-branding.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-storage-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-learndash-manager.php';
-require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-branding-manager.php';
-require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-branding-meta-box.php';
-require_once plugin_dir_path( __FILE__ ) . 'includes/class-mcp-http-auth.php';
 
-/**
- * Inicializa gestores multi-cliente en admin.
- */
-add_action( 'plugins_loaded', function() {
-    if ( class_exists( 'LMSEU_Client_Storage_Manager' ) ) {
-        LMSEU_Client_Storage_Manager::init();
-    }
+// Inicializar Gestor de Almacenamiento
+add_action( 'plugins_loaded', array( 'LMSEU_Client_Storage_Manager', 'init' ) );
+add_action( 'plugins_loaded', array( 'LMSEU_Client_LearnDash_Manager', 'init' ) );
 
-    if ( class_exists( 'LMSEU_Client_LearnDash_Manager' ) ) {
-        LMSEU_Client_LearnDash_Manager::init();
-    }
-}, 20 );
-
+// ── Setup Inicial de Contenido y Menús ──
 add_action( 'init', function() {
     if ( ! get_page_by_path( 'ayuda' ) ) {
         wp_insert_post([
@@ -94,6 +88,7 @@ add_action( 'init', function() {
     }
 });
 
+// ── Registro de Categorías ──
 add_action( 'wp_abilities_api_categories_init', function() {
     if ( ! function_exists( 'wp_register_ability_category' ) ) return;
     
@@ -106,16 +101,13 @@ add_action( 'wp_abilities_api_categories_init', function() {
         'label'       => 'LearnDash',
         'description' => 'Habilidades relacionadas con el LMS LearnDash.'
     ] );
-    
-    wp_register_ability_category( 'wordpress', [
-        'label'       => 'WordPress',
-        'description' => 'Habilidades nativas de WordPress.'
-    ] );
 }, 10 );
 
+// ── Registro de Habilidades ──
 add_action( 'wp_abilities_api_init', function() {
     if ( ! function_exists( 'wp_register_ability' ) ) return;
 
+    // Forzamos la carga de las clases de habilidades
     $learndash_file = plugin_dir_path( __FILE__ ) . 'includes/class-learndash-abilities.php';
     if ( file_exists( $learndash_file ) ) {
         require_once $learndash_file;
@@ -127,43 +119,5 @@ add_action( 'wp_abilities_api_init', function() {
         require_once $support_class_file;
         LMSEU_Support_Abilities::register();
     }
-
-    $wordpress_file = plugin_dir_path( __FILE__ ) . 'includes/class-wordpress-abilities.php';
-    if ( file_exists( $wordpress_file ) ) {
-        require_once $wordpress_file;
-        LMSEU_WordPress_Abilities::register();
-    }
 }, 10 );
 
-// Enqueue scripts del meta box solo en la pantalla de grupos (editar y crear)
-add_action( 'admin_enqueue_scripts', function() {
-    $screen = get_current_screen();
-
-    if ( ! $screen || $screen->post_type !== 'groups' ) {
-        return;
-    }
-
-    // Necesario para usar wp.media() en el botón "Subir Imagen"
-    wp_enqueue_media();
-
-    wp_enqueue_style(
-        'euno-branding-meta-box',
-        plugin_dir_url( __FILE__ ) . 'css/euno-branding-meta-box.css',
-        array(),
-        '1.0.0'
-    );
-
-    wp_enqueue_script(
-        'euno-branding-meta-box',
-        plugin_dir_url( __FILE__ ) . 'js/euno-branding-meta-box.js',
-        array( 'jquery', 'media-editor' ),
-        '1.0.0',
-        true
-    );
-
-    // Pasar strings de texto para el script
-    wp_localize_script( 'euno-branding-meta-box', 'eunoBrandingMetaBox', array(
-        'title' => __( 'Configuración de Branding del Cliente', 'lmseu-mcp-abilities' ),
-        'button' => __( 'Seleccionar imagen', 'lmseu-mcp-abilities' )
-    ) );
-}, 10 );

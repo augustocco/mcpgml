@@ -265,6 +265,7 @@ class LMSEU_Reports_Dashboard {
                                         <th class="px-8 py-4">Grupo</th>
                                         <th class="px-8 py-4 text-center">Inscrip.</th>
                                         <th class="px-8 py-4 text-center">Progreso</th>
+                                        <th class="px-8 py-4 text-center">Tiempo</th>
                                         <th class="px-8 py-4">Último Acceso</th>
                                     </tr>
                                 </thead>
@@ -279,6 +280,7 @@ class LMSEU_Reports_Dashboard {
         </div>
 
         <script>
+        (function() {
             let allData = [];
             let filteredData = [];
             let charts = {};
@@ -299,7 +301,7 @@ class LMSEU_Reports_Dashboard {
                     updateComparisonChart();
                 } catch (e) {
                     console.error("Dashboard Error:", e);
-                    document.getElementById('tableBody').innerHTML = `<tr><td colspan="6" class="text-center py-12 text-red-500 font-bold uppercase">Error de Conexión</td></tr>`;
+                    document.getElementById('tableBody').innerHTML = `<tr><td colspan="7" class="text-center py-12 text-red-500 font-bold uppercase">Error de Conexión</td></tr>`;
                 }
             }
 
@@ -411,7 +413,10 @@ class LMSEU_Reports_Dashboard {
                 const coursesCount = new Set(data.map(d => d.titulo_del_curso)).size;
                 const uniqueUsersCount = new Set(data.map(d => d.id_de_usuario)).size;
                 const totalInsc = data.length;
-                const logins = data.reduce((acc, curr) => acc + (parseInt(curr.total_logins) || 0), 0);
+                
+                // Accesos: Unico por usuario por mes/año (1 acceso por mes, sin importar cuántas veces entró)
+                const logins = new Set(data.map(d => `${d.id_de_usuario}-${d.anio}-${d.mes}`)).size;
+                
                 const completed = data.filter(d => determineStatus(d) === 'Completados').length;
                 const rate = totalInsc > 0 ? ((completed / totalInsc) * 100).toFixed(1) : 0;
 
@@ -494,6 +499,7 @@ class LMSEU_Reports_Dashboard {
                     if (!acc[uid]) acc[uid] = { id: uid, nombre: curr.nombre, email: curr.email, grupo: curr.grupos_del_usuario, last: curr.last_login_date, courses: [] };
                     acc[uid].courses.push(curr); return acc;
                 }, {});
+                
                 const users = Object.values(grouped).slice(0, 100);
 
                 body.innerHTML = users.map(u => {
@@ -501,18 +507,44 @@ class LMSEU_Reports_Dashboard {
                     const compSteps = u.courses.reduce((sum, c) => sum + (parseInt(c.pasos_completados) || 0), 0);
                     const avg = totalSteps > 0 ? Math.round((compSteps / totalSteps) * 100) : 0;
                     
+                    // Calcular tiempo total efectivo del usuario (formato HH:MM:SS)
+                    let totalSeconds = u.courses.reduce((sum, c) => {
+                        if (!c.tiempo_efectivo) return sum;
+                        const parts = c.tiempo_efectivo.split(':').map(Number);
+                        return sum + (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+                    }, 0);
+                    const totalTimeStr = new Date(totalSeconds * 1000).toISOString().substr(11, 8);
+                    
                     let detailRows = u.courses.map(c => {
                         const status = determineStatus(c);
                         let badge = status === 'Completados' ? 'status-completed' : (status === 'En progreso' ? 'status-progress' : 'status-notstarted');
                         return `
-                            <div class="flex items-center justify-between py-3 px-8 border-b border-slate-50 last:border-0 hover:bg-slate-50/50">
-                                <div class="flex-1"><div class="text-xs font-bold text-slate-700">${c.titulo_del_curso}</div></div>
-                                <div class="w-32 text-center font-black text-slate-600 text-[11px]">${c.pasos_completados} / ${c.pasos_totales}</div>
-                                <div class="w-32 text-center"><span class="status-badge ${badge}">${status}</span></div>
-                                <div class="w-40 text-right text-[10px] text-slate-400 font-bold uppercase">${c.curso_completado_el || 'En curso...'}</div>
-                            </div>
+                            <tr class="bg-slate-50/30">
+                                <td class="px-8 py-3 text-xs font-bold text-slate-700">${c.titulo_del_curso}</td>
+                                <td class="px-8 py-3 text-center font-black text-indigo-600 text-[11px]">${c.tiempo_efectivo || '00:00:00'}</td>
+                                <td class="px-8 py-3 text-center font-black text-slate-600 text-[11px]">${c.pasos_completados} / ${c.pasos_totales}</td>
+                                <td class="px-8 py-3 text-center"><span class="status-badge ${badge}">${status}</span></td>
+                                <td class="px-8 py-3 text-right text-[10px] text-slate-400 font-bold uppercase">${c.curso_completado_el || 'En curso...'}</td>
+                            </tr>
                         `;
                     }).join('');
+
+                    const subTable = `
+                        <div class="bg-slate-50/50 p-4">
+                            <table class="w-full border-collapse">
+                                <thead>
+                                    <tr class="text-[9px] uppercase text-slate-400 font-black border-b border-slate-200">
+                                        <th class="px-8 py-2 text-left">Curso Detalle</th>
+                                        <th class="px-8 py-2 text-center">Tiempo Invertido</th>
+                                        <th class="px-8 py-2 text-center">Progreso</th>
+                                        <th class="px-8 py-2 text-center">Estado</th>
+                                        <th class="px-8 py-2 text-right">Finalización</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${detailRows}</tbody>
+                            </table>
+                        </div>
+                    `;
 
                     return `
                         <tr class="user-master-row" onclick="toggleUserDetail('${u.id}', this)">
@@ -521,38 +553,78 @@ class LMSEU_Reports_Dashboard {
                             <td class="px-8 py-5"><span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-md font-bold border border-slate-200">${u.grupo || '-'}</span></td>
                             <td class="px-8 py-5 text-center font-black text-blue-600 text-sm">${u.courses.length}</td>
                             <td class="px-8 py-5"><div class="flex items-center space-x-3"><div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-blue-500" style="width: ${avg}%"></div></div><span class="text-[10px] font-black text-slate-600">${avg}%</span></div></td>
+                            <td class="px-8 py-5 text-center font-black text-slate-700 text-[11px]">${totalTimeStr}</td>
                             <td class="px-8 py-5 text-[10px] text-slate-400 font-black uppercase">${u.last || 'N/A'}</td>
                         </tr>
-                        <tr id="detail-${u.id}" class="course-detail-row"><td colspan="6" class="p-0 border-b border-slate-100 shadow-inner"><div class="bg-slate-50/20">${detailRows}</div></td></tr>
+                        <tr id="detail-${u.id}" class="course-detail-row"><td colspan="7" class="p-0 border-b border-slate-100 shadow-inner">${subTable}</td></tr>
                     `;
                 }).join('');
                 document.getElementById('tableCount').innerText = `${data.length} REGISTROS`;
             }
 
-            function toggleUserDetail(uid, rowEl) {
+            window.toggleUserDetail = function(uid, rowEl) {
                 const detailRow = document.getElementById(`detail-${uid}`);
+                if (!detailRow) return;
+                
                 const isActive = detailRow.classList.contains('active');
-                if (isActive) { detailRow.classList.remove('active'); rowEl.classList.remove('active'); }
-                else { detailRow.classList.add('active'); rowEl.classList.add('active'); }
-            }
+                if (isActive) { 
+                    detailRow.classList.remove('active'); 
+                    rowEl.classList.remove('active'); 
+                } else { 
+                    detailRow.classList.add('active'); 
+                    rowEl.classList.add('active'); 
+                }
+            };
 
-            function exportToCSV() {
-                const headers = ["id_de_usuario", "nombre", "email", "id_del_curso", "titulo_del_curso", "pasos_completados", "pasos_totales", "curso_completado", "curso_completado_el", "total_time", "completion_time", "Username", "First Name", "Last Name", "Group(s)", "course_started_on", "course_total_time_on", "course_last_step_id", "course_last_step_type", "course_last_step_title", "last_login_date"];
-                const rows = filteredData.map(d => [d.id_de_usuario, `"${d.nombre}"`, d.email, d.id_del_curso, `"${d.titulo_del_curso}"`, d.pasos_completados, d.pasos_totales, d.curso_completado, d.curso_completado_el, d.total_time || "00:00:00", d.completion_time || "", d.Username || "", `"${d['First Name'] || ''}"`, `"${d['Last Name'] || ''}"`, `"${d['Group(s)'] || ''}"`, d.course_started_on || "", d.course_total_time_on || "00:00:00", d.course_last_step_id || 0, d.course_last_step_type || "", `"${d.course_last_step_title || ''}"`, d.last_login_date || ""]);
+            window.exportToCSV = function() {
+                if (!filteredData || filteredData.length === 0) {
+                    alert('No hay datos filtrados para exportar.');
+                    return;
+                }
+                const headers = ["id_de_usuario", "nombre", "email", "id_del_curso", "titulo_del_curso", "pasos_completados", "pasos_totales", "curso_completado", "curso_completado_el", "total_time", "tiempo_efectivo", "completion_time", "Username", "First Name", "Last Name", "Group(s)", "course_started_on", "last_login_date"];
+                const rows = filteredData.map(d => [
+                    d.id_de_usuario, 
+                    `"${d.nombre}"`, 
+                    d.email, 
+                    d.id_del_curso, 
+                    `"${d.titulo_del_curso}"`, 
+                    d.pasos_completados, 
+                    d.pasos_totales, 
+                    d.curso_completado, 
+                    d.curso_completado_el, 
+                    d.total_time || "00:00:00", 
+                    d.tiempo_efectivo || "00:00:00",
+                    d.completion_time || "", 
+                    d.Username || "", 
+                    `"${d['First Name'] || ''}"`, 
+                    `"${d['Last Name'] || ''}"`, 
+                    `"${d['Group(s)'] || ''}"`, 
+                    d.course_started_on || "", 
+                    d.last_login_date || ""
+                ]);
                 let csvContent = "\uFEFF" + headers.join(",") + "\n" + rows.map(r => r.join(",")).join("\n");
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.setAttribute("href", url);
                 link.setAttribute("download", "Reporte_EUNO_BI.csv");
-                document.body.appendChild(link); link.click(); document.body.removeChild(link);
-            }
+                document.body.appendChild(link); 
+                link.click(); 
+                document.body.removeChild(link);
+            };
 
-            document.addEventListener('DOMContentLoaded', init);
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+            
+            // Compatibilidad SPA
+            window.eunoInitReports = init;
+        })();
         </script>
         <?php
         return ob_get_clean();
     }
 }
-
 LMSEU_Reports_Dashboard::init();

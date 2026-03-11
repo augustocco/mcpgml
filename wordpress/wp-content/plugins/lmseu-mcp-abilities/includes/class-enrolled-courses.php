@@ -20,7 +20,11 @@ class LMSEU_Enrolled_Courses {
         }
 
         $user_id = get_current_user_id();
-        $enrolled_course_ids = function_exists('learndash_user_get_enrolled_courses') ? learndash_user_get_enrolled_courses( $user_id ) : [];
+        
+        // 1. Obtener lista de cursos filtrada por empresa
+        $enrolled_course_ids = ( class_exists('LMSEU_Branding') ) 
+            ? LMSEU_Branding::get_filtered_user_course_ids( $user_id ) 
+            : ( function_exists('learndash_user_get_enrolled_courses') ? learndash_user_get_enrolled_courses( $user_id ) : [] );
 
         $all_courses = [];
         $unique_categories = [];
@@ -42,6 +46,18 @@ class LMSEU_Enrolled_Courses {
                 $status_key = 'completed';
             } elseif ( $steps_completed > 0 ) {
                 $status_key = 'in_progress';
+            }
+
+            // Determinar si está REALMENTE matriculado (para lógica de botón Asignar)
+            $is_actually_enrolled = sfwd_lms_has_access($course_id, $user_id);
+            $price_type = learndash_get_setting($course_id, 'course_price_type');
+            
+            // Si es abierto, solo lo consideramos "matriculado" si ya tiene fecha de acceso
+            if ( 'open' === $price_type ) {
+                $has_access_date = get_user_meta($user_id, 'course_' . $course_id . '_access_from', true);
+                if ( !$has_access_date ) {
+                    $is_actually_enrolled = false;
+                }
             }
 
             $default_image_id = get_option( 'euno_default_course_image_id' );
@@ -75,7 +91,8 @@ class LMSEU_Enrolled_Courses {
                 'certificate' => $cert_link,
                 'is_completed' => $is_completed,
                 'status_key' => $status_key,
-                'cat_ids' => implode(',', $course_cat_ids)
+                'cat_ids' => implode(',', $course_cat_ids),
+                'is_actually_enrolled' => $is_actually_enrolled
             ];
         }
 
@@ -238,6 +255,15 @@ class LMSEU_Enrolled_Courses {
                 transform: scale(1.02); 
             }
 
+            .btn-assign {
+                background: #f97316 !important; /* orange-500 */
+                color: #fff !important;
+            }
+            .btn-assign:hover {
+                background: #ea580c !important; /* orange-600 */
+                transform: scale(1.02);
+            }
+
             .btn-secondary {
                 display: block;
                 width: 100%;
@@ -356,6 +382,10 @@ class LMSEU_Enrolled_Courses {
                                                     <a href="<?php echo esc_url($cert_href); ?>" target="_blank" class="btn-action w-full text-center bg-emerald-500 hover:bg-emerald-600 shadow-sm"><i class="fas fa-award mr-2"></i>Descargar Certificado</a>
                                                     <a href="<?php echo esc_url($c['url']); ?>" class="btn-secondary">Volver a ver lecciones</a>
                                                 </div>
+                                            <?php elseif ( !$c['is_actually_enrolled'] ) : ?>
+                                                <button onclick="eunoEnrollUser(<?php echo $c['id']; ?>, this)" class="btn-action btn-assign block w-full text-center shadow-sm">
+                                                    <i class="fas fa-plus-circle mr-2"></i>Asignar Curso
+                                                </button>
                                             <?php else : ?>
                                                 <?php 
                                                     $btn_text = ($c['steps_completed'] > 0) ? 'Continuar aprendiendo' : 'Iniciar Curso'; 
@@ -380,90 +410,151 @@ class LMSEU_Enrolled_Courses {
         </div>
 
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const statusBtns = document.querySelectorAll('.ms-tab-btn[data-filter-status]');
-                const catBtns = document.querySelectorAll('.cat-filter-btn');
-                const courses = document.querySelectorAll('.euno-course-item');
-                const noResults = document.getElementById('euno-no-results');
-                const searchInput = document.getElementById('euno-course-search');
-                const searchToggle = document.getElementById('euno-search-toggle');
-                const searchContainer = document.getElementById('euno-search-container');
-                
-                let currentStatus = 'all';
-                let currentCat = 'all';
-                let currentSearch = '';
-
-                if (searchToggle && searchContainer) {
-                    searchToggle.addEventListener('click', () => {
-                        if (searchContainer.style.display === 'none') {
-                            searchContainer.style.display = 'flex';
-                            searchToggle.classList.add('active');
-                            if (searchInput) searchInput.focus();
-                        } else {
-                            searchContainer.style.display = 'none';
-                            searchToggle.classList.remove('active');
-                            if (searchInput) {
-                                searchInput.value = '';
-                                currentSearch = '';
-                                filterCourses();
-                            }
-                        }
-                    });
-                }
-
-                function filterCourses() {
-                    let visibleCount = 0;
+            (function() {
+                function initCourseFilters() {
+                    const statusBtns = document.querySelectorAll('.ms-tab-btn[data-filter-status]');
+                    const catBtns = document.querySelectorAll('.cat-filter-btn');
+                    const courses = document.querySelectorAll('.euno-course-item');
+                    const noResults = document.getElementById('euno-no-results');
+                    const searchInput = document.getElementById('euno-course-search');
+                    const searchToggle = document.getElementById('euno-search-toggle');
+                    const searchContainer = document.getElementById('euno-search-container');
                     
-                    courses.forEach(course => {
-                        const statusMatch = currentStatus === 'all' || course.dataset.status === currentStatus;
-                        const cats = course.dataset.cats.split(',');
-                        const catMatch = currentCat === 'all' || cats.includes(currentCat);
-                        const titleMatch = currentSearch === '' || course.dataset.title.includes(currentSearch);
+                    let currentStatus = 'all';
+                    let currentCat = 'all';
+                    let currentSearch = '';
+
+                    function filterCourses() {
+                        let visibleCount = 0;
                         
-                        if (statusMatch && catMatch && titleMatch) {
-                            course.style.display = 'flex';
-                            visibleCount++;
-                        } else {
-                            course.style.display = 'none';
+                        courses.forEach(course => {
+                            const statusMatch = currentStatus === 'all' || course.dataset.status === currentStatus;
+                            const cats = (course.dataset.cats || '').split(',');
+                            const catMatch = currentCat === 'all' || cats.includes(currentCat);
+                            const titleMatch = currentSearch === '' || course.dataset.title.includes(currentSearch);
+                            
+                            if (statusMatch && catMatch && titleMatch) {
+                                course.style.display = 'flex';
+                                visibleCount++;
+                            } else {
+                                course.style.display = 'none';
+                            }
+                        });
+
+                        if (noResults) {
+                            noResults.style.display = (visibleCount === 0 && courses.length > 0) ? 'flex' : 'none';
                         }
-                    });
-
-                    if (visibleCount === 0 && courses.length > 0) {
-                        if (noResults) noResults.style.display = 'flex';
-                    } else if (noResults) {
-                        if (noResults) noResults.style.display = 'none';
                     }
-                }
 
-                if (searchInput) {
-                    searchInput.addEventListener('input', (e) => {
-                        currentSearch = e.target.value.toLowerCase().trim();
-                        filterCourses();
+                    if (searchToggle && searchContainer) {
+                        searchToggle.onclick = () => {
+                            if (searchContainer.style.display === 'none' || !searchContainer.style.display) {
+                                searchContainer.style.display = 'flex';
+                                searchToggle.classList.add('active');
+                                if (searchInput) searchInput.focus();
+                            } else {
+                                searchContainer.style.display = 'none';
+                                searchToggle.classList.remove('active');
+                                if (searchInput) {
+                                    searchInput.value = '';
+                                    currentSearch = '';
+                                    filterCourses();
+                                }
+                            }
+                        };
+                    }
+
+                    if (searchInput) {
+                        searchInput.oninput = (e) => {
+                            currentSearch = e.target.value.toLowerCase().trim();
+                            filterCourses();
+                        };
+                    }
+
+                    statusBtns.forEach(btn => {
+                        btn.onclick = (e) => {
+                            statusBtns.forEach(b => b.classList.remove('active'));
+                            const target = e.currentTarget;
+                            target.classList.add('active');
+                            currentStatus = target.dataset.filterStatus;
+                            filterCourses();
+                        };
+                    });
+
+                    catBtns.forEach(btn => {
+                        btn.onclick = (e) => {
+                            catBtns.forEach(b => b.classList.remove('active'));
+                            const target = e.currentTarget;
+                            target.classList.add('active');
+                            currentCat = target.dataset.filterCat;
+                            filterCourses();
+                        };
                     });
                 }
 
-                statusBtns.forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        statusBtns.forEach(b => b.classList.remove('active'));
-                        e.target.closest('.ms-tab-btn').classList.add('active');
-                        currentStatus = e.target.closest('.ms-tab-btn').dataset.filterStatus;
-                        filterCourses();
-                    });
-                });
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initCourseFilters);
+                } else {
+                    initCourseFilters();
+                }
+                
+                // Compatibilidad con navegación SPA
+                window.eunoInitCourseFilters = initCourseFilters;
 
-                catBtns.forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        catBtns.forEach(b => b.classList.remove('active'));
-                        e.target.classList.add('active');
-                        currentCat = e.target.dataset.filterCat;
-                        filterCourses();
-                    });
-                });
-            });
+                // Función para auto-asignar curso
+                window.eunoEnrollUser = async function(courseId, btn) {
+                    if (btn.disabled) return;
+                    
+                    const originalText = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Asignando...';
+                    
+                    try {
+                        const response = await fetch('/wp-json/wp-abilities/v1/abilities/learndash/enroll-user/run', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-WP-Nonce': '<?php echo wp_create_nonce( 'wp_rest' ); ?>'
+                            },
+                            body: JSON.stringify({
+                                input: {
+                                    user_id: <?php echo $user_id; ?>,
+                                    course_id: courseId
+                                }
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success || response.ok) {
+                            // Notificar éxito
+                            if (window.showEunoToast) {
+                                window.showEunoToast('Curso asignado correctamente.', 'success');
+                            }
+                            
+                            // Forzar recarga de la página actual mediante SPA si es posible
+                            if (typeof window.eunoSpaNavigate === 'function') {
+                                window.eunoSpaNavigate(window.location.href);
+                            } else {
+                                window.location.reload();
+                            }
+                        } else {
+                            throw new Error(result.message || 'Error al asignar el curso.');
+                        }
+                    } catch (err) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        if (window.showEunoToast) {
+                            window.showEunoToast('Error: ' + err.message, 'error');
+                        } else {
+                            alert('Error: ' + err.message);
+                        }
+                    }
+                };
+            })();
         </script>
         <?php
         return ob_get_clean();
     }
 }
-
 LMSEU_Enrolled_Courses::init();

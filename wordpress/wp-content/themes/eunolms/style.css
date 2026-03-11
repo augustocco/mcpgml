@@ -1,14 +1,11 @@
 /*
-Theme Name: EUNO LMS
+Theme Name: EUNOLMS
 Theme URI: https://eunoconsulting.com
-Author: Augusto César Cañola Ortiz
+Author: Gemini
 Author URI: https://eunoconsulting.com
-Description: Tema personalizado para EUNO LMS con diseño moderno y funcional.
+Description: Tema 100% custom, ultra ligero y optimizado para la plataforma EUNO LMS. Cero dependencias innecesarias.
 Version: 1.0.0
-License: GNU General Public License v2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: eunolms
-Tags: e-commerce, two-columns, right-sidebar, accessibility-ready
 */
 
 :root {
@@ -21,6 +18,7 @@ Tags: e-commerce, two-columns, right-sidebar, accessibility-ready
     --euno-white: #ffffff;
 }
 
+/* Main Content Structure */
 @keyframes bodyFade {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -50,6 +48,7 @@ body {
     box-sizing: border-box;
 }
 
+/* Header Styles */
 .euno-header {
     background-color: var(--euno-white);
     border-bottom: 1px solid var(--euno-border);
@@ -60,22 +59,18 @@ body {
     display: flex;
     align-items: center;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: height 0.3s ease, box-shadow 0.3s ease;
 }
 
 .euno-header.euno-header-scrolled {
     height: 60px;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    background-color: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(10px);
 }
 
+/* WP Admin Bar Fix for Sticky Header */
 .admin-bar .euno-header {
     top: 32px;
 }
-
 @media screen and (max-width: 782px) {
     .admin-bar .euno-header {
         top: 46px;
@@ -98,16 +93,16 @@ body {
 }
 
 .euno-logo img {
-    max-height: 50px;
+    max-height: 40px;
     display: block;
-    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: max-height 0.3s ease;
 }
 
 .euno-header.euno-header-scrolled .euno-logo img {
-    max-height: 40px;
+    max-height: 30px;
 }
 
+/* Nav Menu */
 .euno-main-nav ul {
     list-style: none;
     margin: 0;
@@ -131,7 +126,7 @@ body {
     transition: color 0.3s ease;
     display: flex;
     align-items: center;
-    padding: 25px 0;
+    padding: 25px 0; /* Aumentar el padding vertical para facilitar el hover hacia el submenu */
 }
 
 .euno-main-nav a:hover, 
@@ -140,6 +135,16 @@ body {
     color: var(--euno-primary);
 }
 
+/* Dropdown Caret */
+.euno-main-nav .menu-item-has-children > a::after {
+    content: "\f0d7";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-left: 6px;
+    font-size: 14px;
+}
+
+/* Dropdown Menu */
 .euno-main-nav ul ul.sub-menu {
     position: absolute;
     top: 100%;
@@ -173,7 +178,7 @@ body {
 .euno-main-nav ul ul.sub-menu a {
     padding: 10px 20px;
     color: var(--euno-text-main);
-    text-transform: none;
+    text-transform: none; /* Submenús sin mayúsculas sostenidas */
     font-size: 14px;
     font-weight: 600;
     letter-spacing: 0;
@@ -184,12 +189,14 @@ body {
     color: var(--euno-primary);
 }
 
+/* Nested Dropdowns (Nivel 3) */
 .euno-main-nav ul ul.sub-menu ul.sub-menu {
     top: 0;
     left: 100%;
     margin-left: 5px;
 }
 
+/* Main Content Structure */
 @keyframes eunoFadeIn {
     from { 
         opacity: 0; 
@@ -216,56 +223,7 @@ body {
     padding: 0;
 }
 
-.container {
-    max-width: 1250px;
-    margin: 0 auto;
-    padding: 0 20px;
-    width: 100%;
-}
-
-main {
-    flex: 1;
-}
-
-article {
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--euno-border);
-}
-
-article h2 {
-    color: var(--euno-text-main);
-    margin-top: 0;
-}
-
-article .entry-meta {
-    color: var(--euno-text-muted);
-    font-size: 0.9em;
-    margin-bottom: 10px;
-}
-
-.btn {
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: var(--euno-primary);
-    color: var(--euno-white);
-    text-decoration: none;
-    border-radius: 5px;
-    margin: 10px 0;
-    transition: background-color 0.3s ease;
-}
-
-.btn:hover {
-    background-color: var(--euno-primary-hover);
-}
-
-.post-thumbnail {
-    max-width: 100%;
-    height: auto;
-    border-radius: 5px;
-    margin-bottom: 20px;
-}
-
+/* Footer Styles */
 .euno-footer {
     background-color: var(--euno-white);
     border-top: 1px solid var(--euno-border);
@@ -282,6 +240,7 @@ article .entry-meta {
     margin-bottom: 20px;
 }
 
+/* Footer Brand */
 .euno-footer-logo {
     max-height: 40px;
     margin-bottom: 20px;
@@ -318,6 +277,7 @@ article .entry-meta {
     color: var(--euno-white);
 }
 
+/* Footer Titles & Lists */
 .euno-footer-title {
     font-size: 16px;
     font-weight: 800;
@@ -341,19 +301,20 @@ article .entry-meta {
     font-size: 14px;
     text-decoration: none;
     transition: color 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 
 .euno-footer-nav a:hover {
     color: var(--euno-primary);
 }
 
-.euno-footer-contact-list svg {
+.euno-footer-contact-list i {
     color: var(--euno-primary);
+    width: 20px;
+    text-align: center;
+    margin-right: 8px;
 }
 
+/* Footer Bottom */
 .euno-footer-bottom {
     text-align: center;
 }
@@ -365,46 +326,23 @@ article .entry-meta {
     font-weight: 500;
 }
 
+/* Responsive Footer */
 @media (max-width: 768px) {
     .euno-footer-main {
         grid-template-columns: 1fr;
         gap: 30px;
     }
-    
-    .euno-main-nav {
-        display: none;
-    }
 }
 
-a {
-    color: var(--euno-primary);
-    text-decoration: none;
+/* Intersection Observer - Scroll Reveal Animations */
+.euno-reveal-item {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform; /* Optimizacion hardware */
 }
 
-a:hover {
-    text-decoration: underline;
-}
-
-.comment-list {
-    list-style: none;
-    padding: 0;
-}
-
-.comment-list li {
-    background-color: var(--euno-bg);
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-}
-
-.widget {
-    background-color: var(--euno-bg);
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-}
-
-.widget h3 {
-    margin-top: 0;
-    color: var(--euno-text-main);
+.euno-reveal-item.euno-is-revealed {
+    opacity: 1;
+    transform: translateY(0);
 }
