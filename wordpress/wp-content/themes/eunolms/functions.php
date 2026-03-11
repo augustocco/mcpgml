@@ -73,18 +73,18 @@ add_action( 'template_redirect', 'eunolms_redirect_home_to_profile' );
 
 function eunolms_get_user_stat( $stat ) {
     $user_id = get_current_user_id();
-    // Esta es una función de ejemplo. Necesitarás reemplazarla con tu propia lógica para obtener las estadísticas.
+    // Lógica para obtener las estadísticas reales del usuario. Por ahora, devuelve 0.
     switch ( $stat ) {
         case 'courses':
-            return 3; // Reemplazar con la lógica real
+            return 0;
         case 'assignments':
-            return 2; // Reemplazar con la lógica real
+            return 0;
         case 'quizzes':
-            return 0; // Reemplazar con la lógica real
+            return 0;
         case 'groups':
-            return 0; // Reemplazar con la lógica real
+            return 0;
         case 'certificates':
-            return 2; // Reemplazar con la lógica real
+            return 0;
         default:
             return 0;
     }
