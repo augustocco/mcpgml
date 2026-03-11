@@ -178,6 +178,94 @@
     color: #b8c2cc;
 }
 
+/* Course Grid */
+.course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    width: 100%;
+    padding: 0;
+}
+
+.course-card {
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e1e8ed;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.course-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    border-color: #3490dc;
+}
+
+.course-card a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.course-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+}
+
+.course-card h3 {
+    padding: 15px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1b;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.course-progress-bar {
+    background-color: #e2e8f0;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 0 15px 15px 15px;
+}
+
+.course-progress-bar .progress {
+    height: 100%;
+    background: linear-gradient(90deg, #3490dc 0%, #22d3ee 100%);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+/* Loading State */
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 40px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e2e8f0;
+    border-top: 4px solid #3490dc;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .user-profile-header {
@@ -197,5 +285,15 @@
     }
     .stat-item:nth-child(even) {
         border-right: none;
+    }
+    .course-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    .user-courses-tabs {
+        padding: 20px;
+    }
+    .course-card img {
+        height: 150px;
     }
 }

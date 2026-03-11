@@ -66,6 +66,95 @@ class LMSEU_LearnDash_Abilities {
             'permission_callback' => '__return_true',
             'meta'                => array( 'show_in_rest' => true, 'mcp' => array( 'public' => true, 'type' => 'tool' ), 'annotations' => array( 'readonly' => false ) ),
         ) );
+
+        // —— Crear cursos ——
+        wp_register_ability( 'learndash/create-course', array(
+            'label'               => __( 'Crear Curso de LearnDash', 'lmseu-mcp-abilities' ),
+            'category'            => 'learndash',
+            'description'         => __( 'Crea un nuevo curso en LearnDash.', 'lmseu-mcp-abilities' ),
+            'input_schema'        => array(
+                'type'                 => 'object',
+                'properties'           => array(
+                    'title'     => array( 'type' => 'string', 'description' => 'Título del curso' ),
+                    'content'   => array( 'type' => 'string', 'description' => 'Contenido del curso' ),
+                ),
+                'required' => array( 'title' )
+            ),
+            'execute_callback'    => array( 'LMSEU_LearnDash_Abilities', 'create_course' ),
+            'permission_callback' => '__return_true',
+            'meta'                => array( 'show_in_rest' => true, 'mcp' => array( 'public' => true, 'type' => 'tool' ), 'annotations' => array( 'readonly' => false ) ),
+        ) );
+        // —— Inscribir usuario en curso ——
+        wp_register_ability( 'learndash/enroll-user-in-course', array(
+            'label'               => __( 'Inscribir Usuario en Curso', 'lmseu-mcp-abilities' ),
+            'category'            => 'learndash',
+            'description'         => __( 'Inscribe a un usuario en un curso de LearnDash utilizando su ID, email o nombre de usuario.', 'lmseu-mcp-abilities' ),
+            'input_schema'        => array(
+                'type'                 => 'object',
+                'properties'           => array(
+                    'course_id'  => array( 'type' => 'integer', 'description' => 'ID del curso.' ),
+                    'user_id'    => array( 'type' => 'integer', 'description' => 'ID del usuario.' ),
+                    'email'      => array( 'type' => 'string', 'description' => 'Email del usuario.' ),
+                    'user_login' => array( 'type' => 'string', 'description' => 'Nombre de usuario (login).' ),
+                ),
+                'required' => array( 'course_id' )
+            ),
+            'execute_callback'    => array( 'LMSEU_LearnDash_Abilities', 'enroll_user_in_course' ),
+            'permission_callback' => '__return_true',
+            'meta'                => array( 'show_in_rest' => true, 'mcp' => array( 'public' => true, 'type' => 'tool' ), 'annotations' => array( 'readonly' => false ) ),
+        ) );
+    }
+
+    public static function enroll_user_in_course( $input ) {
+        if ( empty( $input['course_id'] ) ) {
+            return new WP_Error( 'missing_course_id', 'El parámetro course_id es obligatorio.' );
+        }
+
+        $user = null;
+        if ( ! empty( $input['user_id'] ) ) {
+            $user = get_user_by( 'ID', $input['user_id'] );
+        } elseif ( ! empty( $input['email'] ) ) {
+            $user = get_user_by( 'email', $input['email'] );
+        } elseif ( ! empty( $input['user_login'] ) ) {
+            $user = get_user_by( 'login', $input['user_login'] );
+        }
+
+        if ( ! $user ) {
+            return new WP_Error( 'user_not_found', 'No se encontró ningún usuario con el identificador proporcionado (user_id, email, o user_login).' );
+        }
+
+        ld_update_course_access( $user->ID, $input['course_id'] );
+
+        return array(
+            'user_id'   => $user->ID,
+            'user_login' => $user->user_login,
+            'course_id' => $input['course_id'],
+            'message'   => 'Usuario inscrito exitosamente en el curso.'
+        );
+    }
+
+    public static function create_course( $input ) {
+        if ( empty( $input['title'] ) ) {
+            return new WP_Error( 'missing_params', 'Falta el parámetro: title es obligatorio.' );
+        }
+
+        $course_id = wp_insert_post( array(
+            'post_type'    => 'sfwd-courses',
+            'post_title'   => sanitize_text_field( $input['title'] ),
+            'post_content' => isset( $input['content'] ) ? wp_kses_post( $input['content'] ) : '',
+            'post_status'  => 'publish',
+            'post_author'  => 1
+        ) );
+
+        if ( is_wp_error( $course_id ) ) {
+            return $course_id;
+        }
+
+        return array(
+            'course_id' => $course_id,
+            'title'     => $input['title'],
+            'message'   => 'Curso creado exitosamente'
+        );
     }
 
     public static function create_lesson( $input ) {

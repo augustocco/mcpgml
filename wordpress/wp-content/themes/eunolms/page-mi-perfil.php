@@ -52,13 +52,13 @@ get_header(); ?>
                 </ul>
                 <div class="tabs-content">
                     <div id="en-progreso" class="tab-pane active">
-                        <p><?php _e( 'No tienes cursos en progreso actualmente.', 'eunolms' ); ?></p>
+                        <!-- Content loaded dynamically via AJAX -->
                     </div>
                     <div id="sin-iniciar" class="tab-pane">
-                        <p><?php _e( 'No tienes cursos sin iniciar.', 'eunolms' ); ?></p>
+                        <!-- Content loaded dynamically via AJAX -->
                     </div>
                     <div id="completados" class="tab-pane">
-                        <p><?php _e( 'No tienes cursos completados.', 'eunolms' ); ?></p>
+                        <!-- Content loaded dynamically via AJAX -->
                     </div>
                 </div>
             </div>

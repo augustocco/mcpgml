@@ -50,6 +50,15 @@ function eunolms_scripts() {
     wp_enqueue_style( 'eunolms-style', get_stylesheet_uri() );
     wp_enqueue_style( 'eunolms-user-profile', get_template_directory_uri() . '/css/user-profile.css' );
     wp_enqueue_script( 'eunolms-header', get_template_directory_uri() . '/js/header.js', array(), '1.0.0', true );
+    
+    // Enqueue user profile script on profile page
+    if ( is_page( 'mi-perfil' ) ) {
+        wp_enqueue_script( 'eunolms-user-profile', get_template_directory_uri() . '/js/user-profile.js', array('jquery'), '1.0.0', true );
+        wp_localize_script( 'eunolms-user-profile', 'wpApiSettings', array(
+            'root' => esc_url_raw( rest_url() ),
+            'nonce' => wp_create_nonce( 'wp_rest' ),
+        ) );
+    }
 }
 add_action( 'wp_enqueue_scripts', 'eunolms_scripts' );
 
@@ -69,23 +78,153 @@ function eunolms_redirect_home_to_profile() {
         exit;
     }
 }
+
+function eunolms_get_user_courses_by_status() {
+    $user_id = get_current_user_id();
+    if ( ! $user_id || ! function_exists('learndash_user_get_enrolled_courses') ) {
+        return array(
+            'in_progress' => array(),
+            'not_started' => array(),
+            'completed'   => array(),
+        );
+    }
+
+    $enrolled_courses_ids = learndash_user_get_enrolled_courses( $user_id );
+    $courses_by_status = array(
+        'in_progress' => array(),
+        'not_started' => array(),
+        'completed'   => array(),
+    );
+
+    foreach ( $enrolled_courses_ids as $course_id ) {
+        $course_status = learndash_course_status( $course_id, $user_id );
+        $course_post = get_post( $course_id );
+        if( ! $course_post ) continue;
+
+        $progress = learndash_course_get_user_progress( $course_id, $user_id );
+
+        $course_data = array(
+            'id'        => $course_id,
+            'title'     => $course_post->post_title,
+            'permalink' => get_permalink( $course_id ),
+            'image'     => get_the_post_thumbnail_url( $course_id, 'medium' ),
+            'progress'  => $progress ? $progress['percentage'] : 0,
+        );
+
+        if ( $course_status === 'completed' ) {
+            $courses_by_status['completed'][] = $course_data;
+        } elseif ( $course_status === 'in-progress' ) {
+            $courses_by_status['in_progress'][] = $course_data;
+        } else {
+            $courses_by_status['not_started'][] = $course_data;
+        }
+    }
+
+    return $courses_by_status;
+}
 add_action( 'template_redirect', 'eunolms_redirect_home_to_profile' );
 
 function eunolms_get_user_stat( $stat ) {
     $user_id = get_current_user_id();
-    // Lógica para obtener las estadísticas reales del usuario. Por ahora, devuelve 0.
+    if ( ! $user_id ) {
+        return 0;
+    }
+
     switch ( $stat ) {
         case 'courses':
-            return 0;
+            // Total de cursos publicados en la plataforma
+            $count_posts = wp_count_posts( 'sfwd-courses' );
+            return $count_posts->publish ?? 0;
+
         case 'assignments':
+            // Cursos en los que el usuario está inscrito (Asignaciones)
+            if ( function_exists('learndash_user_get_enrolled_courses') ) {
+                $enrolled_courses = learndash_user_get_enrolled_courses( $user_id );
+                return count( $enrolled_courses );
+            }
             return 0;
+
         case 'quizzes':
-            return 0;
+            // Cuestionarios que el usuario ha intentado
+            $user_quiz_meta = get_user_meta( $user_id, '_sfwd-quizzes', true );
+            return empty($user_quiz_meta) ? 0 : count($user_quiz_meta);
+
         case 'groups':
+            // Grupos a los que pertenece el usuario
+            if ( function_exists('learndash_get_users_group_ids') ) {
+                $user_groups = learndash_get_users_group_ids( $user_id );
+                return count( $user_groups );
+            }
             return 0;
+
         case 'certificates':
-            return 0;
+             // Certificados obtenidos por el usuario
+             $args = array(
+                'post_type' => 'sfwd-certificates',
+                'author' => $user_id,
+                'posts_per_page' => -1,
+                'post_status' => 'publish'
+             );
+             $query = new WP_Query($args);
+             return $query->post_count;
+
         default:
             return 0;
     }
+}
+
+/**
+ * Register REST API endpoints for user profile courses
+ */
+function eunolms_register_rest_routes() {
+    register_rest_route( 'eunolms/v1', '/courses/(?P<status>[a-zA-Z0-9-]+)', array(
+        'methods'  => 'GET',
+        'callback' => 'eunolms_get_courses_by_status_rest',
+        'permission_callback' => function() {
+            return is_user_logged_in();
+        },
+    ) );
+}
+add_action( 'rest_api_init', 'eunolms_register_rest_routes' );
+
+/**
+ * REST API callback to get courses by status
+ *
+ * @param WP_REST_Request $request
+ * @return WP_REST_Response
+ */
+function eunolms_get_courses_by_status_rest( $request ) {
+    $status = sanitize_text_field( $request['status'] );
+    $user_id = get_current_user_id();
+    
+    if ( ! $user_id ) {
+        return new WP_Error( 'not_logged_in', 'Usuario no autenticado', array( 'status' => 401 ) );
+    }
+
+    // Get all courses by status
+    $all_courses = eunolms_get_user_courses_by_status();
+    
+    // Map status from URL to array key
+    $status_map = array(
+        'en-progreso' => 'in_progress',
+        'sin-iniciar' => 'not_started',
+        'completados' => 'completed'
+    );
+    
+    $array_key = isset( $status_map[$status] ) ? $status_map[$status] : null;
+    
+    if ( ! $array_key || ! isset( $all_courses[$array_key] ) ) {
+        return new WP_Error( 'invalid_status', 'Estado no válido', array( 'status' => 400 ) );
+    }
+    
+    $courses = $all_courses[$array_key];
+    
+    return new WP_REST_Response( array(
+        'success' => true,
+        'data' => array(
+            'status' => $status,
+            'courses' => $courses,
+            'count' => count( $courses )
+        )
+    ), 200 );
 }
