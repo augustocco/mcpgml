@@ -184,9 +184,33 @@ function eunolms_get_user_stat( $stat ) {
 
     switch ( $stat ) {
         case 'courses':
-            // Total de cursos publicados en la plataforma
-            $count_posts = wp_count_posts( 'sfwd-courses' );
-            return $count_posts->publish ?? 0;
+            // Total de cursos del grupo padre (cliente) del usuario
+            if ( function_exists( 'learndash_group_enrolled_courses' ) && function_exists( 'learndash_get_users_group_ids' ) ) {
+                $parent_group_id = 0;
+                $user_group_ids = learndash_get_users_group_ids( $user_id );
+
+                if ( ! empty( $user_group_ids ) ) {
+                    foreach ( $user_group_ids as $group_id ) {
+                        $parent_id = (int) wp_get_post_parent_id( $group_id );
+
+                        if ( 0 === $parent_id ) {
+                            $parent_group_id = (int) $group_id;
+                            break;
+                        }
+
+                        if ( $parent_id > 0 ) {
+                            $parent_group_id = $parent_id;
+                        }
+                    }
+                }
+
+                if ( $parent_group_id > 0 ) {
+                    $group_courses = learndash_group_enrolled_courses( $parent_group_id );
+                    return is_array( $group_courses ) ? count( $group_courses ) : 0;
+                }
+            }
+
+            return 0;
 
         case 'assignments':
             // Cursos en los que el usuario está inscrito (Asignaciones)
