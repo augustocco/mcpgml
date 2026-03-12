@@ -25,8 +25,8 @@ class LMSEU_Client_Storage_Manager {
         // AÃ±adir UI en la barra de administraciÃ³n (Solo para Admins)
         add_action( 'admin_bar_menu', array( __CLASS__, 'add_admin_bar_switcher' ), 100 );
 
-        // Procesar cambio de cliente desde el switcher
-        add_action( 'admin_init', array( __CLASS__, 'process_client_switch' ) );
+        // Procesar cambio de cliente desde el switcher (init corre en frontend y backend)
+        add_action( 'init', array( __CLASS__, 'process_client_switch' ) );
 
         // Mostrar el cliente activo en la página de medios
         add_filter( 'manage_media_columns', array( __CLASS__, 'add_client_column' ) );
@@ -330,7 +330,7 @@ class LMSEU_Client_Storage_Manager {
         if ( isset( $_GET['action'] ) && $_GET['action'] === 'switch_client' && isset( $_GET['client_id'] ) ) {
             if ( current_user_can( 'manage_options' ) ) {
                 $client_id = intval( $_GET['client_id'] );
-                setcookie( self::COOKIE_NAME, $client_id, time() + (86400 * 30), COOKIEPATH, COOKIE_DOMAIN ); // 30 dÃ­as
+                setcookie( self::COOKIE_NAME, $client_id, time() + (86400 * 30), COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true ); // 30 días
                 
                 // Redirigir limpiando la URL
                 $redirect_url = remove_query_arg( array( 'action', 'client_id' ) );
