@@ -288,39 +288,66 @@ class LMSEU_Client_Storage_Manager {
             )
         ));
 
-        // Opción Global
+        $cookie_name = self::COOKIE_NAME;
+        $max_age     = 86400 * 30;
+
+        // Opción Root (client_id = 0 borra la cookie)
         $wp_admin_bar->add_node( array(
             'id'     => 'euno-client-global',
             'parent' => 'euno-client-switcher',
             'title'  => '📂 Root',
-            'href'   => esc_url( add_query_arg( array( 'action' => 'switch_client', 'client_id' => 0 ) ) ),
+            'href'   => '#',
+            'meta'   => array( 'onclick' => "eunoSwitchClient(0); return false;" ),
         ));
 
         // Obtener todos los grupos padre (clientes)
-        $args = array(
+        $clients = get_posts( array(
             'post_type'      => 'groups',
             'posts_per_page' => -1,
-            'post_parent'    => 0, // Solo grupos top-level
+            'post_parent'    => 0,
             'orderby'        => 'title',
-            'order'          => 'ASC'
-        );
-
-        $clients = get_posts( $args );
+            'order'          => 'ASC',
+        ));
 
         foreach ( $clients as $client ) {
-            $is_active = ( $active_client_id == $client->ID ) ? ' (Activo)' : '';
+            $is_active = ( $active_client_id == $client->ID ) ? ' ✓' : '';
             $wp_admin_bar->add_node( array(
                 'id'     => 'euno-client-' . $client->ID,
                 'parent' => 'euno-client-switcher',
                 'title'  => esc_html( $client->post_title ) . $is_active,
-                'href'   => esc_url( add_query_arg( array( 'action' => 'switch_client', 'client_id' => $client->ID ) ) ),
+                'href'   => '#',
+                'meta'   => array( 'onclick' => 'eunoSwitchClient(' . intval( $client->ID ) . '); return false;' ),
             ));
         }
 
-        // Estilos para destacar
+        // JS + estilos
         echo '<style>
             #wpadminbar .euno-admin-bar-highlight > a { color: #00d084 !important; font-weight: bold; }
-        </style>';
+        </style>
+        <script>
+        function eunoSwitchClient(clientId) {
+            var cookieName  = ' . json_encode( $cookie_name ) . ';
+            var maxAge      = ' . intval( $max_age ) . ';
+            var cookiePath  = "/";
+            var secure      = ' . ( is_ssl() ? 'true' : 'false' ) . ';
+            if (clientId > 0) {
+                document.cookie = cookieName + "=" + clientId
+                    + "; max-age=" + maxAge
+                    + "; path=" + cookiePath
+                    + (secure ? "; secure" : "")
+                    + "; SameSite=Lax";
+            } else {
+                // Borrar cookie para volver a Root
+                document.cookie = cookieName + "=; max-age=0; path=" + cookiePath;
+            }
+            // Recargar la página limpiando query args del switcher
+            var url = window.location.href
+                .replace(/[?&]action=switch_client/, "")
+                .replace(/[?&]client_id=\d+/, "")
+                .replace(/\?&/, "?").replace(/&&/, "&").replace(/\?$/, "");
+            window.location.href = url;
+        }
+        </script>';
     }
 
     /**
