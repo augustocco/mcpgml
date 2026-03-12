@@ -42,6 +42,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-reports-dashboard.php
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-global-filters.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-custom-lesson-template.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-branding.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-branding-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-storage-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-learndash-manager.php';
 

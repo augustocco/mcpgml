@@ -12,7 +12,7 @@
                 return $branding['isotype_url'];
             }
         }
-        return $url ?: wp_upload_dir()['baseurl'] . '/2026/03/iso-euno.png';
+        return $url ?: WP_CONTENT_URL . '/uploads/2026/03/iso-euno.png';
     }, 10, 3 );
     ?>
     <?php wp_head(); ?>
@@ -31,10 +31,9 @@
                     $logo_url    = $branding['logo_url'];
                     $isotype_url = $branding['isotype_url'];
                 } else {
-                    $upload_url  = wp_upload_dir()['baseurl'];
                     $cid         = get_theme_mod( 'custom_logo' );
-                    $logo_url    = $cid ? wp_get_attachment_image_url( $cid, 'full' ) : $upload_url . '/2026/03/euno2025.png';
-                    $isotype_url = $upload_url . '/2026/03/iso-euno.png';
+                    $logo_url    = $cid ? wp_get_attachment_image_url( $cid, 'full' ) : WP_CONTENT_URL . '/uploads/2026/03/euno2025.png';
+                    $isotype_url = WP_CONTENT_URL . '/uploads/2026/03/iso-euno.png';
                 }
                 ?>
                 <img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php bloginfo( 'name' ); ?>" class="euno-logo-full">
