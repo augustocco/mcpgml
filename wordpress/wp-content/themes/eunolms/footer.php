@@ -3,10 +3,14 @@
     <div class="euno-footer-container">
         <div class="euno-footer-main">
             <div class="euno-footer-brand">
-                <?php 
-                $logo_url = ( class_exists('LMSEU_Branding') ) 
-                    ? LMSEU_Branding::get_company_logo_url() 
-                    : ( ( $cid = get_theme_mod( 'custom_logo' ) ) ? wp_get_attachment_image_url( $cid, 'full' ) : '' );
+                <?php
+                if ( class_exists('LMSEU_Client_Branding_Manager') ) {
+                    $branding = LMSEU_Client_Branding_Manager::get_client_branding( get_current_user_id() );
+                    $logo_url = $branding['logo_url'];
+                } else {
+                    $cid      = get_theme_mod( 'custom_logo' );
+                    $logo_url = $cid ? wp_get_attachment_image_url( $cid, 'full' ) : wp_upload_dir()['baseurl'] . '/2026/03/euno2025.png';
+                }
                 ?>
                 <img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php bloginfo( 'name' ); ?>" class="euno-footer-logo">
                 <p class="euno-footer-description">Plataforma de capacitación integral EUNO LMS. Potenciando el conocimiento de tu equipo.</p>
