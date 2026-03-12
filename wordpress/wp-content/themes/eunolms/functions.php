@@ -25,3 +25,25 @@ function eunolms_scripts() {
     wp_enqueue_script( 'eunolms-spa-nav', get_theme_file_uri('/assets/js/spa-navigation.js'), array('eunolms-lazy-reveal'), wp_get_theme()->get('Version'), true );
 }
 add_action( 'wp_enqueue_scripts', 'eunolms_scripts' );
+
+/**
+ * Oculta ítems con clase 'menu-admin-only' para usuarios que no son
+ * administradores ni líderes de grupo de LearnDash.
+ */
+function eunolms_filter_admin_menu_items( $items ) {
+    $is_privileged = current_user_can( 'manage_options' )
+        || current_user_can( 'group_leader' );
+
+    if ( $is_privileged ) {
+        return $items;
+    }
+
+    foreach ( $items as $key => $item ) {
+        if ( in_array( 'menu-admin-only', (array) $item->classes, true ) ) {
+            unset( $items[ $key ] );
+        }
+    }
+
+    return $items;
+}
+add_filter( 'wp_nav_menu_objects', 'eunolms_filter_admin_menu_items' );
