@@ -42,19 +42,16 @@ class LMSEU_Client_Branding_Manager {
             return self::get_default_branding();
         }
 
-        // Obtener el logo como Featured Image
-        $logo_url = get_the_post_thumbnail_url( $parent_group_id, 'full' );
+        // Obtener el logo como Featured Image desactivando el filtro de upload_dir
+        // para que la URL no quede prefijada con la carpeta del cliente activo.
+        remove_filter( 'upload_dir', array( 'LMSEU_Client_Storage_Manager', 'filter_upload_dir' ) );
+        $logo_url    = get_the_post_thumbnail_url( $parent_group_id, 'full' );
+        $isotype_url = get_post_meta( $parent_group_id, self::META_KEYS['isotype_url'], true );
+        add_filter( 'upload_dir', array( 'LMSEU_Client_Storage_Manager', 'filter_upload_dir' ) );
 
-        // Si no hay featured image, usar logo configurado en el tema
         if ( ! $logo_url ) {
             $custom_logo_id = get_theme_mod( 'custom_logo' );
             $logo_url = $custom_logo_id ? wp_get_attachment_image_url( $custom_logo_id, 'full' ) : '';
-        }
-
-        // Obtener isotipo del metacampo
-        $isotype_url = get_post_meta( $parent_group_id, self::META_KEYS['isotype_url'], true );
-        if ( ! $isotype_url ) {
-            $isotype_url = ''; // Sin isotipo
         }
 
         // Obtener colores del metacampo o usar default
@@ -118,7 +115,10 @@ class LMSEU_Client_Branding_Manager {
      */
     private static function group_has_branding_assets( $group_id ) {
         $isotype_url = get_post_meta( $group_id, self::META_KEYS['isotype_url'], true );
+
+        remove_filter( 'upload_dir', array( 'LMSEU_Client_Storage_Manager', 'filter_upload_dir' ) );
         $logo_url = get_the_post_thumbnail_url( $group_id, 'full' );
+        add_filter( 'upload_dir', array( 'LMSEU_Client_Storage_Manager', 'filter_upload_dir' ) );
 
         return ! empty( $isotype_url ) || ! empty( $logo_url );
     }
