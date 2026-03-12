@@ -183,11 +183,13 @@ class LMSEU_Client_Storage_Manager {
 
         $user = wp_get_current_user();
         
-        // Si es Admin, leemos el switcher (cookie)
+        // Si es Admin: en frontend siempre global, en backend usa la cookie del switcher
         if ( in_array( 'administrator', (array) $user->roles ) ) {
+            if ( ! is_admin() ) {
+                return false; // Frontend: vista global siempre
+            }
             if ( isset( $_COOKIE[self::COOKIE_NAME] ) && is_numeric( $_COOKIE[self::COOKIE_NAME] ) ) {
                 $client_id = intval( $_COOKIE[self::COOKIE_NAME] );
-                // Opcional: Validar que el $client_id realmente existe y es un grupo de LearnDash
                 if ( $client_id > 0 && get_post_type( $client_id ) === 'groups' ) {
                     return $client_id;
                 }
@@ -267,7 +269,7 @@ class LMSEU_Client_Storage_Manager {
      * AÃ±ade el Switcher a la Admin Bar.
      */
     public static function add_admin_bar_switcher( $wp_admin_bar ) {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! current_user_can( 'manage_options' ) || ! is_admin() ) {
             return;
         }
 

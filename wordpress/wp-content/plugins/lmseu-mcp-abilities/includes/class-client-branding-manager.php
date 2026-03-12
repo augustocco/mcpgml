@@ -165,13 +165,15 @@ class LMSEU_Client_Branding_Manager {
      * @return array Información de branding default
      */
     public static function get_default_branding() {
+        $upload_url  = wp_upload_dir()['baseurl'];
+        $custom_logo = get_theme_mod( 'custom_logo' );
         return array(
-            'logo_url' => ( ( $cid = get_theme_mod( 'custom_logo' ) ) ? wp_get_attachment_image_url( $cid, 'full' ) : '' ),
-            'isotype_url' => '',
-            'color_primary' => self::DEFAULT_COLORS['primary'],
+            'logo_url'        => $custom_logo ? wp_get_attachment_image_url( $custom_logo, 'full' ) : $upload_url . '/2026/03/euno2025.png',
+            'isotype_url'     => $upload_url . '/2026/03/iso-euno.png',
+            'color_primary'   => self::DEFAULT_COLORS['primary'],
             'color_secondary' => self::DEFAULT_COLORS['secondary'],
-            'color_tertiary' => self::DEFAULT_COLORS['tertiary'],
-            'group_id' => 0
+            'color_tertiary'  => self::DEFAULT_COLORS['tertiary'],
+            'group_id'        => 0
         );
     }
 
