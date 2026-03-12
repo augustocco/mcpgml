@@ -5,10 +5,12 @@
 
 get_header(); ?>
 
-<div id="primary" class="content-area">
-    <main id="main" class="site-main" role="main">
-        <?php echo do_shortcode( '[euno_student_profile]' ); ?>
-    </main>
-</div>
+<main class="euno-main-content">
+    <div class="euno-container euno-main-box">
+        <div class="euno-main-box-inner">
+            <?php echo do_shortcode( '[euno_student_profile]' ); ?>
+        </div>
+    </div>
+</main>
 
 <?php get_footer(); ?>
