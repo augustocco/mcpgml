@@ -8,6 +8,10 @@ Version: 1.0.0
 Text Domain: eunolms
 */
 
+body {
+    min-width: 375px;
+}
+
 :root {
     --euno-primary: #3b82f6;
     --euno-primary-hover: #2563eb;
@@ -94,12 +98,14 @@ body {
 
 .euno-logo img {
     max-height: 40px;
+    max-width: 180px;
     display: block;
     transition: max-height 0.3s ease;
 }
 
 .euno-header.euno-header-scrolled .euno-logo img {
     max-height: 30px;
+    max-width: 180px;
 }
 
 /* Nav Menu */
@@ -243,6 +249,7 @@ body {
 /* Footer Brand */
 .euno-footer-logo {
     max-height: 40px;
+    max-width: 180px;
     margin-bottom: 20px;
 }
 
