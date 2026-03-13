@@ -233,7 +233,7 @@ body {
 .euno-footer {
     background-color: var(--euno-white);
     border-top: 1px solid var(--euno-border);
-    padding: 60px 20px 20px;
+    padding: 16px 20px;
     margin-top: auto;
 }
 

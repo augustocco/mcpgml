@@ -130,24 +130,24 @@ class LMSEU_Student_Profile {
             .ms-stat-item { border: 1px solid #f1f5f9; border-radius: 5px; }
 
             .ms-tabs-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 5px; margin-bottom: 2rem; }
-            .ms-tab-btn { 
-                flex: 1 1 auto; 
+            .ms-tab-btn {
+                flex: 1 1 auto;
                 min-width: 140px;
-                padding: 12px 16px; 
-                font-size: 12px; 
-                font-weight: 800; 
-                text-transform: uppercase; 
-                letter-spacing: 0.5px; 
-                color: #64748b; 
-                border-radius: 5px; 
+                padding: 12px 16px;
+                font-size: 12px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--euno-text-muted, #64748b);
+                border-radius: 5px;
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 border: none;
                 cursor: pointer;
             }
-            .ms-tab-btn:hover { color: #3b82f6; background: rgba(255,255,255,0.5); }
-            .ms-tab-btn.active { 
-                background: #fff; 
-                color: #3b82f6;
+            .ms-tab-btn:hover { color: var(--euno-primary, #3b82f6); background: rgba(255,255,255,0.5); }
+            .ms-tab-btn.active {
+                background: #fff;
+                color: var(--euno-primary, #3b82f6);
                 box-shadow: 0 4px 12px rgba(0,0,0,0.05);
                 border-radius: 5px;
             }
@@ -157,11 +157,11 @@ class LMSEU_Student_Profile {
             @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
             .course-card { border-radius: 5px; border: 1px solid #f1f5f9; overflow: hidden; transition: all 0.3s ease; }
-            .course-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: #3b82f6; }
+            .course-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: var(--euno-primary, #3b82f6); }
 
             .btn-action {
-                background: #3b82f6;
-                color: #fff;
+                background: var(--euno-primary, #3b82f6) !important;
+                color: #fff !important;
                 font-weight: 800;
                 font-size: 11px;
                 text-transform: uppercase;
@@ -170,11 +170,13 @@ class LMSEU_Student_Profile {
                 border-radius: 5px;
                 transition: all 0.3s;
             }
-            .btn-action:hover { 
-                background: #2563eb !important; 
+            .btn-action:hover {
+                background: var(--euno-primary-hover, #2563eb) !important;
                 color: #fff !important;
-                transform: scale(1.02); 
+                transform: scale(1.02);
+                opacity: 0.9;
             }
+            .euno-icon-primary { color: var(--euno-primary, #3b82f6) !important; }
 
             .btn-secondary {
                 display: block;
@@ -182,7 +184,7 @@ class LMSEU_Student_Profile {
                 text-align: center;
                 font-size: 11px;
                 font-weight: 700;
-                color: #94a3b8; /* slate-400 */
+                color: #94a3b8;
                 text-transform: uppercase;
                 letter-spacing: 1px;
                 padding: 10px 20px;
@@ -193,7 +195,7 @@ class LMSEU_Student_Profile {
             .btn-secondary:hover {
                 background: #f8fafc;
                 border-color: #e2e8f0;
-                color: #3b82f6;
+                color: var(--euno-primary, #3b82f6);
             }
 
             /* TOAST SYSTEM */
@@ -218,7 +220,7 @@ class LMSEU_Student_Profile {
                 align-items: center;
                 gap: 12px;
                 animation: toastIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
-                border-left: 4px solid #3b82f6;
+                border-left: 4px solid var(--euno-primary, #3b82f6);
             }            .euno-toast.success { border-left-color: #10b981; }
             .euno-toast.error { border-left-color: #ef4444; }
             .euno-toast.fadeOut { animation: toastOut 0.3s ease forwards; }
@@ -270,7 +272,7 @@ class LMSEU_Student_Profile {
                     <div class="text-center md:text-left">
                         <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight"><?php echo esc_html( $name ); ?></h1>
                         <p class="text-sm text-slate-400 font-bold uppercase tracking-widest mt-2 flex items-center justify-center md:justify-start">
-                            <i class="fas fa-calendar-check mr-2 text-blue-500"></i> Miembro desde <?php echo esc_html( $registered_formatted ); ?>
+                            <i class="fas fa-calendar-check mr-2 euno-icon-primary"></i> Miembro desde <?php echo esc_html( $registered_formatted ); ?>
                         </p>
                     </div>
                 </div>
@@ -354,23 +356,23 @@ class LMSEU_Student_Profile {
                 <!-- Stats Grid (Compact & Subtle) -->
                 <div class="flex flex-wrap items-center justify-center border-t border-slate-100 bg-white">
                     <div class="flex-1 min-w-[120px] py-4 flex flex-col items-center border-r border-slate-100 last:border-r-0">
-                        <i class="fas fa-book-open text-blue-500 mb-2 text-lg"></i>
+                        <i class="fas fa-book-open euno-icon-primary mb-2 text-lg"></i>
                         <p class="text-[12px] text-slate-500 font-medium">Cursos <b class="text-slate-900 ml-1"><?php echo $total_available; ?></b></p>
                     </div>
                     <div class="flex-1 min-w-[120px] py-4 flex flex-col items-center border-r border-slate-100 last:border-r-0">
-                        <i class="fas fa-tasks text-blue-500 mb-2 text-lg"></i>
+                        <i class="fas fa-tasks euno-icon-primary mb-2 text-lg"></i>
                         <p class="text-[12px] text-slate-500 font-medium">Asignaciones <b class="text-slate-900 ml-1"><?php echo $total_enrolled; ?></b></p>
                     </div>
                     <div class="flex-1 min-w-[120px] py-4 flex flex-col items-center border-r border-slate-100 last:border-r-0">
-                        <i class="fas fa-question-circle text-blue-500 mb-2 text-lg"></i>
+                        <i class="fas fa-question-circle euno-icon-primary mb-2 text-lg"></i>
                         <p class="text-[12px] text-slate-500 font-medium">Cuestionarios <b class="text-slate-900 ml-1"><?php echo $quizzes_done; ?></b></p>
                     </div>
                     <div class="flex-1 min-w-[120px] py-4 flex flex-col items-center border-r border-slate-100 last:border-r-0">
-                        <i class="fas fa-users text-blue-500 mb-2 text-lg"></i>
+                        <i class="fas fa-users euno-icon-primary mb-2 text-lg"></i>
                         <p class="text-[12px] text-slate-500 font-medium">Grupos <b class="text-slate-900 ml-1"><?php echo $group_count; ?></b></p>
                     </div>
                     <div class="flex-1 min-w-[120px] py-4 flex flex-col items-center border-r border-slate-100 last:border-r-0">
-                        <i class="fas fa-award text-blue-500 mb-2 text-lg"></i>
+                        <i class="fas fa-award euno-icon-primary mb-2 text-lg"></i>
                         <p class="text-[12px] text-slate-500 font-medium">Certificados <b class="text-slate-900 ml-1"><?php echo $total_completed; ?></b></p>
                     </div>
                 </div>
@@ -441,7 +443,7 @@ class LMSEU_Student_Profile {
                     <h3 class="text-lg font-extrabold text-slate-800 mb-4 line-clamp-2 h-14 leading-tight"><?php echo esc_html($c['title']); ?></h3>
                     
                     <div class="flex items-center gap-4 text-[11px] text-slate-400 font-black uppercase mb-6">
-                        <span><i class="fas fa-book-open mr-1 text-blue-400"></i> <?php echo $c['steps_total']; ?> Lecciones</span>
+                        <span><i class="fas fa-book-open mr-1 euno-icon-primary"></i> <?php echo $c['steps_total']; ?> Lecciones</span>
                         <span><i class="fas fa-check-double mr-1 text-emerald-400"></i> <?php echo $c['steps_completed']; ?> Listas</span>
                     </div>
 
@@ -449,7 +451,7 @@ class LMSEU_Student_Profile {
                         <?php if ( $c['is_completed'] ) : ?>
                             <?php $cert_href = ! empty( $c['certificate'] ) ? $c['certificate'] : add_query_arg( ['ld-profile-action' => 'get-certificate', 'course_id' => $c['id']], $c['url'] ); ?>
                             <div class="flex flex-col gap-2">
-                                <a href="<?php echo esc_url($cert_href); ?>" target="_blank" class="btn-action w-full text-center bg-emerald-500 hover:bg-emerald-600 shadow-sm"><i class="fas fa-award mr-2"></i>Descargar Certificado</a>
+                                <a href="<?php echo esc_url($cert_href); ?>" target="_blank" class="btn-action w-full text-center shadow-sm"><i class="fas fa-award mr-2"></i>Descargar Certificado</a>
                                 <a href="<?php echo esc_url($c['url']); ?>" class="btn-secondary">Volver a ver lecciones</a>
                             </div>
                         <?php else : ?>

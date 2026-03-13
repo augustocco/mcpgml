@@ -219,6 +219,38 @@ class LMSEU_Client_Branding_Manager {
     }
 
     /**
+     * Obtiene el branding completo directamente por ID de grupo (sin pasar por el usuario)
+     * Útil para el detector de subdominios en la página de login (usuario no autenticado)
+     *
+     * @param int $group_id ID del grupo padre (cliente)
+     * @return array Información de branding con logo, isotipo y colores
+     */
+    public static function get_client_branding_by_group( $group_id ) {
+        if ( ! $group_id ) {
+            return self::get_default_branding();
+        }
+
+        remove_filter( 'upload_dir', array( 'LMSEU_Client_Storage_Manager', 'filter_upload_dir' ) );
+        $logo_url    = get_the_post_thumbnail_url( $group_id, 'full' );
+        $isotype_url = get_post_meta( $group_id, self::META_KEYS['isotype_url'], true );
+        add_filter( 'upload_dir', array( 'LMSEU_Client_Storage_Manager', 'filter_upload_dir' ) );
+
+        if ( ! $logo_url ) {
+            $custom_logo_id = get_theme_mod( 'custom_logo' );
+            $logo_url = $custom_logo_id ? wp_get_attachment_image_url( $custom_logo_id, 'full' ) : WP_CONTENT_URL . '/uploads/2026/03/euno2025.png';
+        }
+
+        return array(
+            'logo_url'        => $logo_url,
+            'isotype_url'     => $isotype_url,
+            'color_primary'   => get_post_meta( $group_id, self::META_KEYS['color_primary'], true )   ?: self::DEFAULT_COLORS['primary'],
+            'color_secondary' => get_post_meta( $group_id, self::META_KEYS['color_secondary'], true ) ?: self::DEFAULT_COLORS['secondary'],
+            'color_tertiary'  => get_post_meta( $group_id, self::META_KEYS['color_tertiary'], true )  ?: self::DEFAULT_COLORS['tertiary'],
+            'group_id'        => $group_id,
+        );
+    }
+
+    /**
      * Verifica si un grupo es un cliente (grupo padre)
      *
      * @param int $group_id ID del grupo

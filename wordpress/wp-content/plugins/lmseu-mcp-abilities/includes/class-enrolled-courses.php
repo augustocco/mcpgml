@@ -151,7 +151,7 @@ class LMSEU_Enrolled_Courses {
                 padding: 8px 12px 16px 12px !important; 
                 font-size: 15px; 
                 font-weight: 700; 
-                color: #475569 !important; 
+                color: var(--euno-text-muted, #475569) !important; 
                 background: transparent !important;
                 border: none !important;
                 border-bottom: 3px solid transparent !important;
@@ -163,13 +163,13 @@ class LMSEU_Enrolled_Courses {
             }
             
             .ms-tab-btn:hover { 
-                color: #3b82f6 !important; 
+                color: var(--euno-primary, #3b82f6) !important; 
                 background: transparent !important;
             }
             
             .ms-tab-btn.active { 
-                color: #3b82f6 !important; 
-                border-bottom-color: #3b82f6 !important;
+                color: var(--euno-primary, #3b82f6) !important; 
+                border-bottom-color: var(--euno-primary, #3b82f6) !important;
             }
 
             #euno-search-toggle {
@@ -198,7 +198,7 @@ class LMSEU_Enrolled_Courses {
             #euno-search-toggle:focus,
             #euno-search-toggle.active {
                 background: #f1f5f9 !important; /* slate-100 */
-                color: #3b82f6 !important; /* blue-500 */
+                color: var(--euno-primary, #3b82f6) !important;
                 opacity: 1 !important;
             }
 
@@ -212,7 +212,7 @@ class LMSEU_Enrolled_Courses {
             }
 
             .ms-tab-btn.active .ms-tab-count {
-                background: #3b82f6;
+                background: var(--euno-primary, #3b82f6);
                 color: #ffffff;
             }
             
@@ -224,7 +224,7 @@ class LMSEU_Enrolled_Courses {
                 padding: 10px 15px;
                 font-size: 13px;
                 font-weight: 700;
-                color: #64748b;
+                color: var(--euno-text-muted, #64748b);
                 background: transparent;
                 border: 1px solid transparent;
                 text-align: left;
@@ -232,15 +232,15 @@ class LMSEU_Enrolled_Courses {
                 transition: all 0.2s;
                 border-radius: 5px;
             }
-            .cat-filter-btn:hover { color: #3b82f6; background: #f8fafc; }
-            .cat-filter-btn.active { color: #3b82f6; background: #eff6ff; border-left: 3px solid #3b82f6; font-weight: 800; }
+            .cat-filter-btn:hover { color: var(--euno-primary, #3b82f6); background: #f8fafc; }
+            .cat-filter-btn.active { color: var(--euno-primary, #3b82f6); background: #eff6ff; border-left: 3px solid var(--euno-primary, #3b82f6); font-weight: 800; }
 
             .course-card { border-radius: 5px; border: 1px solid #f1f5f9; overflow: hidden; transition: all 0.3s ease; }
-            .course-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: #3b82f6; }
+            .course-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: var(--euno-primary, #3b82f6); }
             
             .btn-action {
-                background: #3b82f6;
-                color: #fff;
+                background: var(--euno-primary, #3b82f6) !important;
+                color: #fff !important;
                 font-weight: 800;
                 font-size: 11px;
                 text-transform: uppercase;
@@ -250,9 +250,10 @@ class LMSEU_Enrolled_Courses {
                 transition: all 0.3s;
             }
             .btn-action:hover { 
-                background: #2563eb !important; 
+                background: var(--euno-primary-hover, #2563eb) !important;
                 color: #fff !important;
-                transform: scale(1.02); 
+                transform: scale(1.02);
+                opacity: 0.9;
             }
 
             .btn-assign {
@@ -281,8 +282,9 @@ class LMSEU_Enrolled_Courses {
             .btn-secondary:hover {
                 background: #f8fafc;
                 border-color: #e2e8f0;
-                color: #3b82f6;
+                color: var(--euno-primary, #3b82f6);
             }
+            .euno-icon-primary { color: var(--euno-primary, #3b82f6) !important; }
 
             @keyframes slideDownFade {
                 from { opacity: 0; transform: translateY(-10px); }
@@ -331,7 +333,7 @@ class LMSEU_Enrolled_Courses {
                 <div class="w-full md:w-1/4 lg:w-1/5 shrink-0">
                     <div class="border border-slate-100 p-4 sticky top-24 bg-white rounded-[5px]">
                         <h4 class="font-extrabold text-slate-800 uppercase tracking-widest text-xs mb-4 pb-4 border-b border-slate-100">
-                            <i class="fas fa-filter text-blue-500 mr-2"></i> Categorías
+                            <i class="fas fa-filter euno-icon-primary mr-2"></i> Categorías
                         </h4>
                         <div class="flex flex-col gap-1">
                             <button class="cat-filter-btn active" data-filter-cat="all">Todas las categorías</button>
@@ -363,7 +365,7 @@ class LMSEU_Enrolled_Courses {
                                      
                                     <div class="h-48 overflow-hidden relative">
                                         <img src="<?php echo esc_url($c['image']); ?>" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110" alt="Course Image">
-                                        <div class="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 text-[10px] font-black text-blue-600 uppercase shadow-sm rounded-[5px]">
+                                        <div class="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 text-[10px] font-black euno-icon-primary uppercase shadow-sm rounded-[5px]">
                                             <?php echo $progress; ?>% Completado
                                         </div>
                                     </div>
@@ -371,7 +373,7 @@ class LMSEU_Enrolled_Courses {
                                         <h3 class="text-lg font-extrabold text-slate-800 mb-4 line-clamp-2 h-14 leading-tight"><?php echo esc_html($c['title']); ?></h3>
                                         
                                         <div class="flex items-center gap-4 text-[11px] text-slate-400 font-black uppercase mb-6">
-                                            <span><i class="fas fa-book-open mr-1 text-blue-400"></i> <?php echo $c['steps_total']; ?> Lecciones</span>
+                                            <span><i class="fas fa-book-open mr-1 euno-icon-primary"></i> <?php echo $c['steps_total']; ?> Lecciones</span>
                                             <span><i class="fas fa-check-double mr-1 text-emerald-400"></i> <?php echo $c['steps_completed']; ?> Listas</span>
                                         </div>
 
@@ -379,7 +381,7 @@ class LMSEU_Enrolled_Courses {
                                             <?php if ( $c['is_completed'] ) : ?>
                                                 <?php $cert_href = ! empty( $c['certificate'] ) ? $c['certificate'] : add_query_arg( ['ld-profile-action' => 'get-certificate', 'course_id' => $c['id']], $c['url'] ); ?>
                                                 <div class="flex flex-col gap-2">
-                                                    <a href="<?php echo esc_url($cert_href); ?>" target="_blank" class="btn-action w-full text-center bg-emerald-500 hover:bg-emerald-600 shadow-sm"><i class="fas fa-award mr-2"></i>Descargar Certificado</a>
+                                                    <a href="<?php echo esc_url($cert_href); ?>" target="_blank" class="btn-action w-full text-center shadow-sm"><i class="fas fa-award mr-2"></i>Descargar Certificado</a>
                                                     <a href="<?php echo esc_url($c['url']); ?>" class="btn-secondary">Volver a ver lecciones</a>
                                                 </div>
                                             <?php elseif ( !$c['is_actually_enrolled'] ) : ?>

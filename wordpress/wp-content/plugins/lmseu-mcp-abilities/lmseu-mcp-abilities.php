@@ -45,6 +45,10 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-branding.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-branding-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-storage-manager.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-learndash-manager.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-client-branding-meta-box.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-aws-settings.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-route53-manager.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-subdomain-detector.php';
 
 // Inicializar Gestor de Almacenamiento
 add_action( 'plugins_loaded', array( 'LMSEU_Client_Storage_Manager', 'init' ) );

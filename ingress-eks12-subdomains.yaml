@@ -1,0 +1,26 @@
+# Ingress para subdominios dinámicos de clientes en eks12
+# Maneja *.lmseunoconsulting.com → svc-prueba12
+# Los hosts explícitos definidos en ingress-plataformas tienen prioridad sobre este wildcard.
+# Aplicar con: kubectl apply -f ingress-eks12-subdomains.yaml -n plataformas
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-eks12-subdomains
+  namespace: plataformas
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "*.lmseunoconsulting.com"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: svc-prueba12
+            port:
+              number: 80

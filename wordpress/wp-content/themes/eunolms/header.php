@@ -16,6 +16,25 @@
     }, 10, 3 );
     ?>
     <?php wp_head(); ?>
+    <?php
+    // Colores corporativos del cliente: sobreescribir variables CSS dinámicamente
+    if ( is_user_logged_in() && class_exists( 'LMSEU_Client_Branding_Manager' ) ) {
+        $branding = LMSEU_Client_Branding_Manager::get_client_branding( get_current_user_id() );
+        $cp  = ! empty( $branding['color_primary'] )   ? esc_attr( $branding['color_primary'] )   : '';
+        $cs  = ! empty( $branding['color_secondary'] ) ? esc_attr( $branding['color_secondary'] ) : '';
+        $ct  = ! empty( $branding['color_tertiary'] )  ? esc_attr( $branding['color_tertiary'] )  : '';
+        if ( $cp || $cs || $ct ) {
+            echo '<style>:root{';
+            if ( $cp ) {
+                echo '--euno-primary:' . $cp . ';';
+                echo '--euno-primary-hover:' . $cp . ';';
+            }
+            if ( $cs ) echo '--euno-text-muted:' . $cs . ';';
+            if ( $ct ) echo '--euno-text-main:' . $ct . ';';
+            echo '}</style>';
+        }
+    }
+    ?>
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
